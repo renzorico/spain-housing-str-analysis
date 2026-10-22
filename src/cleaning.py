@@ -160,23 +160,25 @@ def add_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def clean_listings(df: pd.DataFrame) -> pd.DataFrame:
-    """Filter to the priced, active market, printing each step.
+    """Filter to priced listings with open dates, printing each step.
 
-    Unlike Berlin, seasonal (> 31 nights) listings are KEPT: the seasonal
-    rent cap is one of the levers under study. Split on stay_band.
+    The population is the same one the website and src/metrics.py use:
+    listings with at least one open date (is_active), so notebook and site
+    numbers describe the same listings. Listings asking over 31 nights are
+    KEPT: the rent limit on seasonal lets is one of the levers under study.
+    Split on stay_band.
     """
     df = add_columns(df)
-    print(f"start:                              {len(df):>6,} listings")
+    print(f"start:                                  {len(df):>6,} listings")
+
+    df = df[df["is_active"]]
+    print(f"with open dates (the site's population): {len(df):>5,}")
 
     df = df[df["price"].notna() & (df["price"] > 0) & (df["price"] <= cfg.MAX_PRICE)]
-    print(f"with a usable price (<= {cfg.MAX_PRICE} EUR):   {len(df):>6,}")
+    print(f"with a usable price (<= {cfg.MAX_PRICE} EUR):       {len(df):>6,}")
 
-    # Without a minimum stay a listing cannot be put on either side of
-    # the 31-night line. In this file these rows also have no open dates.
-    df = df[df["minimum_nights"].notna()]
-    print(f"known minimum stay:                 {len(df):>6,}")
-
-    df = df[(df["number_of_reviews"] > 0) | (df["availability_365"] > 0)]
-    print(f"active (has reviews or open dates): {len(df):>6,}")
+    # A listing with open dates always has a minimum stay in these files, so
+    # no listing is dropped here for lacking one; the check keeps that true.
+    assert df["minimum_nights"].notna().all(), "listing with open dates but no minimum stay"
 
     return df.reset_index(drop=True)
