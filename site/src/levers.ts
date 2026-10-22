@@ -172,25 +172,33 @@ export function initLevers(inputs: Inputs): void {
     ...Object.entries(meta.policy_levers).map(([id, lever]) => {
       const card = el("article", { class: "card" });
       const facts = el("dl");
-      const add = (term: string, text: string) => {
-        if (text) facts.append(el("dt", {}, term), el("dd", {}, text));
+      const add = (list: HTMLElement, term: string, text: string) => {
+        if (text) list.append(el("dt", {}, term), el("dd", {}, text));
       };
-      add("Applies to", `${lever.jurisdiction}. Cities here: ${lever.applies_to.map((c) => CITY_LABELS[c]).join(", ")}.`);
-      add("What it says", lever.rule);
+      // What a reader needs first: the rule, what the data shows, what it cannot show.
+      add(facts, "What it says", lever.rule);
+      add(facts, "What this data shows", dataShows(id, inputs));
+      add(facts, "What this data cannot show", lever.data_limits);
+
+      // The legal detail, one click away.
+      const detail = el("dl");
+      add(detail, "Applies to", `${lever.jurisdiction}. Cities here: ${lever.applies_to.map((c) => CITY_LABELS[c]).join(", ")}.`);
       if (lever.exceptions.length > 0) {
-        facts.append(el("dt", {}, "Exceptions and conditions"));
+        detail.append(el("dt", {}, "Exceptions and conditions"));
         const list = el("ul");
         for (const exception of lever.exceptions) list.append(el("li", {}, exception));
         const wrapper = el("dd");
         wrapper.append(list);
-        facts.append(wrapper);
+        detail.append(wrapper);
       }
-      add("Since", lever.deadline ? `${lever.applies_from}; deadline ${lever.deadline}` : lever.applies_from);
-      add("Status", `${lever.status} (checked ${lever.status_checked_on})`);
-      add("Details", lever.notes);
-      add("What this data shows", dataShows(id, inputs));
-      add("What this data cannot show", lever.data_limits);
-      card.append(el("h3", {}, lever.title), el("p", { class: "law" }, lever.law), facts);
+      add(detail, "Since", lever.deadline ? `${lever.applies_from}; deadline ${lever.deadline}` : lever.applies_from);
+      add(detail, "Status", lever.status);
+      add(detail, "Checked", lever.status_checked_on);
+      add(detail, "Notes", lever.notes);
+      const more = el("details", { class: "card-detail" });
+      more.append(el("summary", {}, "Jurisdiction, exceptions and status"), detail);
+
+      card.append(el("h3", {}, lever.title), el("p", { class: "law" }, lever.law), facts, more);
       const links = el("p", { class: "card-links" });
       lever.sources.forEach((source, index) => {
         if (index > 0) links.append(document.createTextNode(" · "));
