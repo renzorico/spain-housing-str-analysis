@@ -14,12 +14,13 @@ municipal elections on 23 May 2027. Housing is a central issue in both.
 
 | Lever | Rule | What the data can show |
 |---|---|---|
-| Tourist-licence phase-out | Barcelona's ~10,000 HUT licences end in Nov 2028 (Decret llei 3/2023) | Share of listings with an HUT number, by district and host type |
-| Rent cap | New leases in stressed areas capped by the reference index (Ley 12/2023) | Not directly: Airbnb prices are nightly, not leases |
-| Seasonal rentals | Cap extended to seasonal (temporada) lets (Llei 11/2025) | Whether minimum stays bunch just above 31 nights |
-| Owners' veto | Owners' associations can block new tourist lets (LO 1/2025) | Not directly: no building-level data in the file |
+| Tourist-licence phase-out | Existing tourist flats (HUT) need an urban-planning licence by 9 Nov 2028 or must stop; one extension of up to 5 years can be requested (Decret llei 3/2023, upheld by STC 64/2025) | Share of listings with an HUT number, by district and host type |
+| Rent cap | New leases in stressed areas capped by the reference index since 16 Mar 2024 (Ley 12/2023); Barcelona's zone extended in Oct 2026 | Not directly: Airbnb prices are nightly, not leases |
+| Seasonal rentals | Seasonal lets not for holidays count as housing leases, so the cap applies, since 1 Jan 2026 (Llei 11/2025; parts challenged at the Constitutional Court) | Whether minimum stays bunch around the 31-day line |
+| Owners' veto | Owners' associations can block new tourist lets by a 3/5 vote since 3 Apr 2025, not retroactively (LO 1/2025) | Not directly: no building-level data in the file |
 
-All dates and law numbers are in `src/config.py` (`POLICY_LEVERS`).
+All dates, law numbers and primary sources (BOE / DOGC) are in
+`src/config.py` (`POLICY_LEVERS`), checked on 22 Oct 2026.
 
 ---
 
