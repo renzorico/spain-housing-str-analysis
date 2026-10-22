@@ -51,3 +51,15 @@ def test_place_names_match_across_sources():
     assert official.normalise_place_name(
         "Sant Pere, Santa Caterina i la Ribera"
     ) == official.normalise_place_name("Sant Pere Santa Caterina i la Ribera")
+
+
+def test_exit_gap_in_points():
+    # 1 of 2 month-plus listings gone (50%), 0 of 2 tourist gone (0%)
+    table = pd.DataFrame(
+        {"tourist": [2, 0, 0], "boundary": [0, 1, 0], "seasonal": [0, 0, 0],
+         "inactive": [0, 0, 0], "gone": [0, 0, 1]},
+        index=["tourist", "boundary", "seasonal"],
+    )
+    gap, se = metrics.exit_gap(table)
+    assert gap == 50.0
+    assert se > 0

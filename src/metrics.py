@@ -99,3 +99,15 @@ def transitions(earlier: pd.DataFrame, later: pd.DataFrame) -> pd.DataFrame:
     order = BANDS + [INACTIVE, GONE]
     table = pd.crosstab(start, end).reindex(index=BANDS, columns=order, fill_value=0)
     return table.astype(int)
+
+
+def exit_gap(table: pd.DataFrame) -> tuple[float, float]:
+    """From a transitions table: (exit rate of month-plus listings) minus
+    (exit rate of tourist listings), in percentage points, with its
+    standard error. Month-plus = boundary + seasonal (31+ nights)."""
+    month_plus = table.loc[["boundary", "seasonal"]].sum()
+    tourist = table.loc["tourist"]
+    p1, n1 = month_plus[GONE] / month_plus.sum(), month_plus.sum()
+    p2, n2 = tourist[GONE] / tourist.sum(), tourist.sum()
+    se = np.sqrt(p1 * (1 - p1) / n1 + p2 * (1 - p2) / n2)
+    return float((p1 - p2) * 100), float(se * 100)
