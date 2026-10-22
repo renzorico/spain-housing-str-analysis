@@ -32,18 +32,30 @@ data/raw/
 | Issue | Where | How the project handles it |
 |---|---|---|
 | `price` is missing on **100%** of rows | Every Dec 2025 snapshot, all cities | Price trends use Mar, Jun and Sep 2026 only. Counts and licences still use Dec |
-| Listings with **zero open dates** jump to ~22–24% | Every Sep 2026 snapshot, all cities (1–6% in Dec outside Barcelona and Madrid) | Every over-time metric uses `is_active` (`availability_365 > 0`), the same rule for every snapshot. The jump is reported, not explained |
+| Listings with **zero open dates** jump to ~22–24% | Every Sep 2026 snapshot, all cities (1–6% in Dec outside Barcelona and Madrid) | Every metric on the site and in the notebooks uses one population, *listings with open dates* (`is_active`: `availability_365 > 0`), the same rule for every snapshot. The jump is reported, not explained |
 | `minimum_nights` missing on 7–18% of rows | Sep 2026 snapshots only | All such rows have zero open dates, so `is_active` already excludes them |
 | Airbnb's licence form changed | The *Exempt – seasonal rental* option appears between the Mar and Jun 2026 snapshots in Barcelona (0 to 2,881 listings with open dates) and is used in Madrid (6,833) and Valencia (1,450) by Sep 2026, but almost never in Málaga (4) or Sevilla (0). Empty licence fields fall in every city | Licence categories are compared within a snapshot, never as a before/after effect of a rule |
-| `calculated_host_listings_count` missing | 113 active listings in Barcelona Jun 2026 (0.8%) | Counted as not professional in shares; shown as host size "unknown" on the site |
+| `calculated_host_listings_count` missing | 113 listings with open dates in Barcelona Jun 2026 (0.8%) | Counted as not professional in shares; shown as host size "unknown" on the site |
 | No district-level rents | Generalitat publishes municipality level only | Rents appear as a Barcelona time series, not by district |
+
+## Definitions used everywhere
+
+| Term | Meaning |
+|---|---|
+| **Listings with open dates** | Listings with at least one open date in the next 365 days (`availability_365 > 0`). The only population the site and the notebooks count, so their numbers describe the same listings. "Active" is shorthand in code only: an empty calendar can mean booked, blocked or withdrawn |
+| **Listed, no open dates** | Still in a later file, but with no open dates |
+| **Absent from the later scrape** | Not in the later file. May be withdrawn, re-listed under a new id, or missed by the scrape; the data cannot say which |
+| **Under 31 / exactly 31 / over 31** | The minimum stay a listing asks, against the Catalan 31-day tourist-stay limit. Across cities, **31+ ("month-plus")** is only a common measurement threshold |
+| **Host account** | One `host_id`. Not necessarily one owner or one company |
+| **Register records / numbers** | Records are administrative case ids (the headline stock); numbers are distinct parseable HUT numbers. A few records have no usable number, so the two differ (10,721 vs 10,623 in 2026 Q3) |
+| **Match to the register** | A displayed number exists in the register quarter nearest in time to the snapshot. It does not verify that the listing is that property |
 
 ## The Inside Airbnb columns used
 
 | Column | Meaning |
 |---|---|
 | `price` | Nightly asking price in **euros** |
-| `minimum_nights` | Minimum stay. In Catalonia, 31 or fewer = tourist use; more = seasonal let |
+| `minimum_nights` | Minimum stay the host asks. Labelled *under 31*, *exactly 31* or *over 31* nights, never by legality: the Catalan tourist-stay limit is 31 days, and a minimum stay is a setting, not a contract or an actual stay |
 | `room_type` | Entire home/apt · Private room · Shared room · Hotel room |
 | `neighbourhood_group` | District |
 | `calculated_host_listings_count` | How many listings this host runs in the city |
