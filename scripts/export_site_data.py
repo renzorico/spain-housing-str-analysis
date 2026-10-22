@@ -29,7 +29,7 @@ OUT_DIR = cfg.PROJECT_ROOT / "site" / "public" / "data"
 COORD_DECIMALS = 4  # ~11 m; Inside Airbnb already offsets points up to 150 m
 GEOJSON_DECIMALS = 5  # ~1 m; enough for neighbourhood outlines
 MIN_NIGHTS_CAP = 120  # longer minimum stays are grouped into one "120+" bar
-CURVE_POINTS = 100
+CURVE_POINTS = 500  # dense enough that the site can interpolate "top 1%" accurately
 HOST_SIZE_BUCKETS = [(1, 1, "1"), (2, 4, "2-4"), (5, 19, "5-19"), (20, np.inf, "20+")]
 # A few listings have no host-listing count (0.8% in Jun 2026).
 HOST_SIZE_LABELS = [label for _, _, label in HOST_SIZE_BUCKETS] + ["unknown"]
