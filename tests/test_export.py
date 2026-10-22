@@ -112,3 +112,16 @@ def test_contrasts_are_barcelona_minus_the_city():
         contrast = gap["vs_barcelona"]
         assert contrast["difference_points"] == round(cities["barcelona"]["points"] - gap["points"], 1)
         assert contrast["ci_low"] <= contrast["difference_points"] <= contrast["ci_high"]
+
+
+def test_register_match_units_are_consistent():
+    register = load("register.json")
+    for m in register["match"]:
+        assert m["displayed_numbers_found_in_register"] <= m["displayed_numbers"] <= m["listings_showing_number"]
+        assert m["register_numbers"] <= m["register_records"]
+        assert m["displayed_found_pct"] == round(100 * m["displayed_numbers_found_in_register"] / m["displayed_numbers"], 1)
+        assert m["register_numbers_displayed_pct"] == round(
+            100 * m["displayed_numbers_found_in_register"] / m["register_numbers"], 1
+        )
+    latest = register["match"][-1]
+    assert latest["register_records"] == register["totals"][latest["register_quarter"]]

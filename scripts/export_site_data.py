@@ -412,24 +412,42 @@ def round_coordinates(coords):
 
 
 def register(snapshots: dict, reconciliation: dict) -> dict:
+    """How the HUT numbers shown on listings with open dates relate to the
+    official register.
+
+    Units, kept apart on purpose: register *records* (case ids, the headline
+    stock), register *numbers* (distinct parseable HUT numbers, a few records
+    have none) and *listings*. Each Airbnb snapshot is matched to the register
+    quarter nearest in time. A match shows that a number exists in the
+    register; it does not verify that the listing belongs to that property,
+    and it cannot show how many licensed flats are absent from Airbnb.
+    """
     latest_quarter = list(src.HUT_REGISTER_URLS)[-1]
-    numbers = official.registered_hut_numbers(latest_quarter)
+    numbers_by_quarter: dict[str, set] = {}
     match = []
     for snapshot in src.SNAPSHOTS["barcelona"]:
+        quarter = official.register_quarter_for(snapshot)
+        if quarter not in numbers_by_quarter:
+            numbers_by_quarter[quarter] = official.registered_hut_numbers(quarter)
+        numbers = numbers_by_quarter[quarter]
         shown = (
             metrics.active(snapshots[("barcelona", snapshot)])["license"]
             .map(cleaning.listing_hut_number)
             .dropna()
         )
-        distinct = set(shown)
-        matched = distinct & numbers
+        displayed = set(shown)
+        matched = displayed & numbers
         match.append(
             {
                 "snapshot": snapshot,
+                "register_quarter": quarter,
+                "register_records": official.register_record_count(quarter),
+                "register_numbers": len(numbers),
                 "listings_showing_number": int(len(shown)),
-                "distinct_numbers": len(distinct),
-                "match_register_pct": round(len(matched) / len(distinct) * 100, 1),
-                "register_visible_pct": round(len(matched) / len(numbers) * 100, 1),
+                "displayed_numbers": len(displayed),
+                "displayed_numbers_found_in_register": len(matched),
+                "displayed_found_pct": round(len(matched) / len(displayed) * 100, 1),
+                "register_numbers_displayed_pct": round(len(matched) / len(numbers) * 100, 1),
                 "numbers_on_2plus_listings": int((shown.value_counts() > 1).sum()),
             }
         )
@@ -437,6 +455,7 @@ def register(snapshots: dict, reconciliation: dict) -> dict:
         "register_quarter": latest_quarter,
         "totals": official.hut_totals().to_dict(),
         "match": match,
+        "match_population": "listings with open dates",
         "neighbourhood_reconciliation": reconciliation,
     }
 
