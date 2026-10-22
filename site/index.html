@@ -18,7 +18,7 @@
     <meta property="og:title" content="The 31-Night Line" />
     <meta
       property="og:description"
-      content="42% of Barcelona's active Airbnb listings ask for 31+ nights, against 2–8% in four other Spanish cities. What the data shows about the housing rules, and what it cannot show."
+      content="42% of Barcelona's Airbnb listings with open dates ask for 31+ nights, against 2–8% in four other Spanish cities. What the data shows about the housing rules, and what it cannot show."
     />
     <meta property="og:image" content="__SITE_URL__og-image.png" />
     <meta property="og:image:width" content="1200" />
@@ -46,13 +46,14 @@
       <section id="nights" aria-labelledby="nights-title">
         <h2 id="nights-title">Where would you draw the line?</h2>
         <p>
-          Each bar is the share of active listings asking for that minimum stay. Move the line and
+          Each bar is the share of listings with open dates asking for that minimum stay. Move the line and
           see how many listings sit on each side. In Barcelona, they pile up at exactly 31 and 32
           nights.
         </p>
         <div class="controls" id="nights-controls"></div>
         <div class="chart" id="nights-chart" role="img"></div>
         <p class="readout" id="nights-readout" aria-live="polite"></p>
+        <p class="note" id="nights-robustness"></p>
         <p class="note">
           Why 31? A tourist stay is “a continuous period of 31 days or fewer” (Decret 75/2020, art.
           221-1). Whether a 31-<em>night</em> booking counts as 31 days or fewer is ambiguous, so 31
@@ -61,14 +62,14 @@
       </section>
 
       <section id="map-section" aria-labelledby="map-title">
-        <h2 id="map-title">Every active listing in Barcelona</h2>
+        <h2 id="map-title">Every listing with open dates in Barcelona</h2>
         <p>
           Colour the map by stay type, by the licence a listing shows, or by how many listings its
           host runs. Switch quarters to see the market change. Tap a dot for details.
         </p>
         <div class="controls" id="map-controls"></div>
         <div class="map-wrap">
-          <div id="map" aria-label="Map of active Airbnb listings in Barcelona"></div>
+          <div id="map" aria-label="Map of Airbnb listings with open dates in Barcelona"></div>
           <div class="legend" id="map-legend"></div>
         </div>
         <p class="note">
@@ -80,9 +81,10 @@
       <section id="flows" aria-labelledby="flows-title">
         <h2 id="flows-title">Where did December's listings go?</h2>
         <p>
-          Inside Airbnb keeps the same id for a listing across snapshots, so each active listing
-          from December 2025 can be followed. By September it is in the same band, has switched
-          band, is still listed but has no open dates, or is gone from the file.
+          Inside Airbnb keeps the same id for a listing across snapshots, so each listing with
+          open dates in December 2025 can be followed. By September it is in the same band, has
+          switched band, is still listed but has no open dates, or is absent from the later scrape
+          (withdrawn, re-listed under a new id, or missed: the file cannot say which).
         </p>
         <div class="controls" id="flows-controls"></div>
         <div class="chart" id="flows-chart" role="img"></div>
@@ -100,8 +102,8 @@
       <section id="cities" aria-labelledby="cities-title">
         <h2 id="cities-title">Five cities, two snapshots</h2>
         <p>
-          The same measures for each city, December 2025 and September 2026. Only active listings
-          are counted.
+          The same measures for each city, December 2025 and September 2026. Only listings with
+          open dates are counted.
         </p>
         <div class="controls" id="cities-controls"></div>
         <div class="chart" id="cities-chart" role="img"></div>
@@ -111,8 +113,9 @@
       <section id="concentration" aria-labelledby="concentration-title">
         <h2 id="concentration-title">Who supplies the market?</h2>
         <p>
-          Hosts ranked from largest to smallest. How many of the listings do the biggest ones run?
-          If every host ran the same number, the curve would be the diagonal.
+          Host accounts ranked from largest to smallest. How many of the listings do the biggest ones
+          run? If every account ran the same number, the curve would be the diagonal. An account is
+          not necessarily one owner or one company.
         </p>
         <div class="controls" id="concentration-controls"></div>
         <div class="chart" id="concentration-chart" role="img"></div>
@@ -128,8 +131,8 @@
         <div class="stats" id="register-stats"></div>
         <div class="chart" id="register-chart" role="img"></div>
         <p class="note">
-          One dot per neighbourhood, September 2026. Dots above the diagonal have more active
-          listings than registered flats. Colour shows the share of listings asking 31+ nights,
+          One dot per neighbourhood, September 2026. Dots above the diagonal have more
+          listings with open dates than registered flats. Colour shows the share of listings asking 31+ nights,
           which need no tourist licence. Grey dots have no listings.
         </p>
         <p class="note" id="register-reconciliation"></p>

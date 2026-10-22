@@ -6,7 +6,7 @@ import * as Plot from "@observablehq/plot";
 
 import { mountChart, plotStyle } from "./charts";
 import { CITIES, CITY_LABELS, type BarcelonaTrend, type CityRow, type Meta, type Register, type RentRow } from "./data";
-import { cssVar, el, formatCalendarQuarter, formatInt, formatPct, formatQuarter, requireElement } from "./ui";
+import { cssVar, el, formatCalendarQuarter, formatInt, formatPct, formatQuarter, POPULATION, requireElement } from "./ui";
 
 const TIMELINE_START = "2023-09-01";
 const TIMELINE_END = "2029-03-01";
@@ -63,7 +63,7 @@ function dataShows(id: string, { meta, register, rents, trends, cities }: Inputs
         .filter((v): v is number => v !== undefined);
       if (!first || !second || !last || barcelona === undefined || others.length === 0) return "";
       return (
-        `${formatPct(barcelona, 0)} of Barcelona's active listings ask 31+ nights, vs ${Math.round(Math.min(...others))}–${Math.round(Math.max(...others))}% in ${CITIES.filter((c) => c !== "barcelona").map((c) => CITY_LABELS[c]).join(", ")}. ` +
+        `${formatPct(barcelona, 0)} of Barcelona's ${POPULATION} ask 31+ nights, vs ${Math.round(Math.min(...others))}–${Math.round(Math.max(...others))}% in ${CITIES.filter((c) => c !== "barcelona").map((c) => CITY_LABELS[c]).join(", ")}. ` +
         `Seasonal-band listings went from ${formatInt(first.bands.seasonal)} (${formatQuarter(first.snapshot)}) to ${formatInt(second.bands.seasonal)} (${formatQuarter(second.snapshot)}) and ${formatInt(last.bands.seasonal)} (${formatQuarter(last.snapshot)}). ` +
         "Month-plus listings left Airbnb faster than tourist ones in most of the five cities, not only in Catalonia."
       );

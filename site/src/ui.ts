@@ -1,9 +1,22 @@
 // Small, framework-free UI helpers shared by the sections.
 
+/** What the site counts: listings with at least one open date at the snapshot.
+ *  An empty calendar can mean booked, blocked or withdrawn, so the rest are
+ *  "listed, no open dates", never "inactive". */
+export const POPULATION = "listings with open dates";
+
 export const formatInt = new Intl.NumberFormat("en-GB").format;
 
 export function formatPct(value: number, digits = 1): string {
   return `${value.toFixed(digits)}%`;
+}
+
+/** "2025-12-14" -> "14 Dec" (the year is in the surrounding text). */
+export function formatDay(isoDate: string): string {
+  if (!isoDate) return "n/a";
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  // en-US month names ("Sep"), matching the "Sep 2026" labels elsewhere
+  return `${date.getUTCDate()} ${date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })}`;
 }
 
 export function formatQuarter(snapshot: string): string {

@@ -3,7 +3,7 @@ import * as Plot from "@observablehq/plot";
 
 import { mountChart, plotStyle } from "./charts";
 import { BANDS, CITIES, CITY_LABELS, type Band, type City, type CityRow, type TransitionTable, type Transitions } from "./data";
-import { cssVar, el, formatInt, formatPct, formatQuarter, requireElement, segmented } from "./ui";
+import { cssVar, el, formatInt, formatPct, formatQuarter, POPULATION, requireElement, segmented } from "./ui";
 
 const BAND_LABELS: Record<Band, string> = {
   tourist: "Tourist (<31)",
@@ -11,13 +11,13 @@ const BAND_LABELS: Record<Band, string> = {
   seasonal: "Seasonal (>31)",
 };
 
-const OUTCOMES = ["same band", "other band", "no open dates", "gone"] as const;
+const OUTCOMES = ["same band", "other band", "listed, no open dates", "absent from later scrape"] as const;
 type Outcome = (typeof OUTCOMES)[number];
 const OUTCOME_COLOURS: Record<Outcome, string> = {
   "same band": "--cat-5",
   "other band": "--cat-4",
-  "no open dates": "--boundary",
-  gone: "--cat-6",
+  "listed, no open dates": "--boundary",
+  "absent from later scrape": "--cat-6",
 };
 
 interface Segment {
@@ -38,8 +38,8 @@ function segments(table: TransitionTable): Segment[] {
     const values: Record<Outcome, number> = {
       "same band": same,
       "other band": otherBand,
-      "no open dates": at("inactive"),
-      gone: at("gone"),
+      "listed, no open dates": at("inactive"),
+      "absent from later scrape": at("gone"),
     };
     return OUTCOMES.map((outcome) => ({
       band: BAND_LABELS[band],
@@ -93,7 +93,7 @@ export function initFlows(transitions: Transitions): void {
       height: 200,
       marginLeft: 104,
       style: plotStyle(),
-      x: { label: "% of the band's active listings →", domain: [0, 100], grid: true },
+      x: { label: "% of the band's listings with open dates →", domain: [0, 100], grid: true },
       y: { label: null, domain: BANDS.map((b) => BAND_LABELS[b]) },
       color: {
         domain: [...OUTCOMES],
@@ -118,7 +118,7 @@ export function initFlows(transitions: Transitions): void {
     });
     plot.setAttribute(
       "aria-label",
-      `Stacked bars: what happened by ${formatQuarter(t.to_snapshot)} to ${CITY_LABELS[city]}'s active listings of ${formatQuarter(t.from_snapshot)}, by stay band.`,
+      `Stacked bars: what happened by ${formatQuarter(t.to_snapshot)} to ${CITY_LABELS[city]}'s ${POPULATION} of ${formatQuarter(t.from_snapshot)}, by stay band.`,
     );
     return plot;
   }

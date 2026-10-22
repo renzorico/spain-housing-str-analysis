@@ -3,7 +3,7 @@ import * as Plot from "@observablehq/plot";
 
 import { mountChart, plotStyle } from "./charts";
 import type { NeighbourhoodRow, Register } from "./data";
-import { cssVar, el, formatInt, formatPct, formatQuarter, requireElement } from "./ui";
+import { cssVar, el, formatInt, formatPct, formatQuarter, POPULATION, requireElement } from "./ui";
 
 const LEGEND_WIDTH = 260;
 const LEGEND_MARGIN = 14;
@@ -48,7 +48,7 @@ export function initRegister(register: Register, places: NeighbourhoodRow[]): vo
     [
       `${p.neighbourhood} (${p.district})`,
       `${formatInt(p.registered_huts)} registered flats`,
-      `${formatInt(p.active_listings)} active listings, ${formatInt(p.with_tourist_licence)} showing a licence`,
+      `${formatInt(p.active_listings)} ${POPULATION}, ${formatInt(p.with_tourist_licence)} showing a licence`,
       p.share_month_plus === null ? "no listings: share of 31+ nights is not defined" : `${formatPct(p.share_month_plus, 0)} ask 31+ nights`,
     ].join("\n");
 
@@ -59,7 +59,7 @@ export function initRegister(register: Register, places: NeighbourhoodRow[]): vo
       marginLeft: 48,
       style: plotStyle(),
       x: { label: "registered tourist flats (official) →", domain: [0, top], grid: true },
-      y: { label: "↑ active Airbnb listings", domain: [0, top], grid: true },
+      y: { label: "↑ Airbnb listings with open dates", domain: [0, top], grid: true },
       color: {
         type: "linear",
         domain: [0, 80],
@@ -89,7 +89,7 @@ export function initRegister(register: Register, places: NeighbourhoodRow[]): vo
         }),
       ],
     });
-    plot.setAttribute("aria-label", "Scatter plot: registered tourist flats against active Airbnb listings, one dot per Barcelona neighbourhood.");
+    plot.setAttribute("aria-label", "Scatter plot: registered tourist flats against Airbnb listings with open dates, one dot per Barcelona neighbourhood.");
     // Legend drawn separately: the built-in one has no side margins, so its
     // end labels overhang at phone width.
     const legend = plot.legend("color", { marginLeft: LEGEND_MARGIN, marginRight: LEGEND_MARGIN, width: LEGEND_WIDTH, style: plotStyle() });

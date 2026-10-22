@@ -57,7 +57,7 @@ export interface Meta {
   caveats: string[];
 }
 
-/** One quarter's active Barcelona listings, as parallel arrays. */
+/** One quarter's Barcelona listings with open dates, as parallel arrays. */
 export interface Points {
   legend: {
     band: string[];
@@ -85,6 +85,9 @@ export interface NightsRow {
 }
 
 export interface SnapshotSummary {
+  population: string;
+  /** [numerator, denominator] behind each share_* value */
+  counts: Record<string, [number, number]>;
   listings: number;
   active: number;
   share_31_nights: number;
@@ -96,8 +99,21 @@ export interface SnapshotSummary {
   median_price: number | null;
 }
 
+export interface PopulationCheck {
+  listings: number;
+  unknown_minimum_stay: number;
+  known_minimum_stay: number;
+  month_plus_pct: number;
+}
+
 export interface CityRow {
   city: City;
+  scrape_dates: Record<string, string>;
+  availability_sensitivity: {
+    open_dates: PopulationCheck;
+    open_dates_or_reviewed_12m: PopulationCheck;
+    all_listings: PopulationCheck;
+  };
   rounds: Record<string, SnapshotSummary>;
   exit_gap: { points: number; ci_low: number; ci_high: number };
   top_host_share: Record<string, number>;
@@ -130,12 +146,12 @@ export interface Register {
 export const BANDS = ["tourist", "boundary", "seasonal"] as const;
 export type Band = (typeof BANDS)[number];
 
-/** Where one snapshot's active listings were in a later snapshot. */
+/** Where one snapshot's listings with open dates were in a later snapshot. */
 export interface TransitionTable {
   from_snapshot: string;
   to_snapshot: string;
   from: Band[];
-  to: string[]; // the bands, then "inactive" and "gone"
+  to: string[]; // the bands, then "inactive" (listed, no open dates) and "gone" (absent from the later scrape)
   counts: number[][];
 }
 

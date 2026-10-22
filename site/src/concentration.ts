@@ -3,7 +3,7 @@ import * as Plot from "@observablehq/plot";
 
 import { mountChart, plotStyle } from "./charts";
 import { CITIES, CITY_LABELS, type City, type Concentration } from "./data";
-import { cssVar, el, formatPct, requireElement } from "./ui";
+import { cssVar, el, formatPct, POPULATION, requireElement } from "./ui";
 
 const X_MAX = 30; // % of hosts shown; beyond this the curves flatten out
 const DEFAULT_TOP = 1;
@@ -49,8 +49,8 @@ export function initConcentration(curves: Concentration): void {
       height: 320,
       marginLeft: 44,
       style: plotStyle(),
-      x: { label: "largest hosts, % of all hosts →", domain: [0, X_MAX] },
-      y: { label: "↑ % of active listings they run", domain: [0, 100], grid: true },
+      x: { label: "largest host accounts, % of all host accounts →", domain: [0, X_MAX] },
+      y: { label: `↑ % of ${POPULATION} they run`, domain: [0, 100], grid: true },
       color: {
         domain: CITIES.map((c) => CITY_LABELS[c]),
         range: CITIES.map((c) => cssVar(CITY_COLOURS[c])),
@@ -66,16 +66,16 @@ export function initConcentration(curves: Concentration): void {
         ),
       ],
     });
-    plot.setAttribute("aria-label", "Line chart: share of active listings run by the largest hosts, by city, September 2026.");
+    plot.setAttribute("aria-label", `Line chart: share of ${POPULATION} run by the largest host accounts, by city, September 2026.`);
 
     const ranked = CITIES.map((c) => ({ city: CITY_LABELS[c], share: listingShareAt(curves[c], top) })).sort((a, b) => b.share - a.share);
     readout.textContent =
-      `The largest ${top}% of hosts run: ` + ranked.map((r) => `${r.city} ${formatPct(r.share, 0)}`).join(" · ") + " of active listings (September 2026).";
+      `The largest ${top}% of host accounts run: ` + ranked.map((r) => `${r.city} ${formatPct(r.share, 0)}`).join(" · ") + ` of ${POPULATION} (September 2026).`;
     return plot;
   }
 
   const group = el("div", { class: "control-group wide" });
-  const label = el("label", { class: "control-label", for: "top-slider" }, "Largest … % of hosts");
+  const label = el("label", { class: "control-label", for: "top-slider" }, "Largest … % of host accounts");
   const slider = el("input", { id: "top-slider", type: "range", min: "1", max: "20", step: "1", value: String(top) });
   const output = el("output", { for: "top-slider" }, `${top}%`);
   slider.addEventListener("input", () => {

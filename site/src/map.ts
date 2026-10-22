@@ -1,4 +1,4 @@
-// Map of active Barcelona listings, one quarter at a time.
+// Map of Barcelona listings with open dates, one quarter at a time.
 import type { Feature, FeatureCollection, Point } from "geojson";
 import * as maplibregl from "maplibre-gl";
 import type { ExpressionSpecification, GeoJSONSource } from "maplibre-gl";
@@ -8,7 +8,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 
 import { loadPoints, type Points } from "./data";
-import { cssVar, el, formatInt, formatQuarter, onThemeChange, requireElement, segmented } from "./ui";
+import { cssVar, el, formatInt, formatQuarter, onThemeChange, POPULATION, requireElement, segmented } from "./ui";
 
 maplibregl.setWorkerUrl(workerUrl);
 
@@ -151,7 +151,7 @@ export async function initMap(snapshots: string[]): Promise<void> {
       counts.set(code, (counts.get(code) ?? 0) + 1);
     }
     legend.replaceChildren(
-      el("span", { class: "control-label" }, `${formatQuarter(snapshot)} · ${formatInt(data.features.length)} active listings`),
+      el("span", { class: "control-label" }, `${formatQuarter(snapshot)} · ${formatInt(data.features.length)} ${POPULATION}`),
     );
     for (const [code, category] of Object.entries(CATEGORIES[mode])) {
       const count = counts.get(code) ?? 0;

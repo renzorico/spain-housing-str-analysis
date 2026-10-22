@@ -3,8 +3,8 @@
 import * as Plot from "@observablehq/plot";
 
 import { mountChart, plotStyle } from "./charts";
-import { CITIES, CITY_LABELS, type City, type NightsRow } from "./data";
-import { cssVar, el, formatInt, formatPct, requireElement, segmented } from "./ui";
+import { CITIES, CITY_LABELS, type City, type CityRow, type NightsRow } from "./data";
+import { cssVar, el, formatInt, formatPct, POPULATION, requireElement, segmented } from "./ui";
 
 const MAX_NIGHTS_SHOWN = 60; // longer minimum stays are summarised in the readout
 const CHART_HEIGHT = 300;
@@ -18,10 +18,11 @@ interface Bar {
   side: "tourist" | "seasonal";
 }
 
-export function initNightsChart(rows: NightsRow[], legalLine: number): void {
+export function initNightsChart(rows: NightsRow[], legalLine: number, cities: CityRow[]): void {
   const chart = requireElement<HTMLDivElement>("nights-chart");
   const controls = requireElement<HTMLDivElement>("nights-controls");
   const readout = requireElement<HTMLParagraphElement>("nights-readout");
+  const robustness = requireElement<HTMLParagraphElement>("nights-robustness");
 
   const roundsFor = (city: City) => [...new Set(rows.filter((r) => r.city === city).map((r) => r.round))];
 
@@ -73,7 +74,7 @@ export function initNightsChart(rows: NightsRow[], legalLine: number): void {
           n === 1 || n === line || (n % tickStep === 0 && Math.abs(n - line) > 2) ? String(n) : "",
         padding: 0.12,
       },
-      y: { label: "↑ % of active listings", grid: true, nice: true },
+      y: { label: `↑ % of ${POPULATION}`, grid: true, nice: true },
       color: {
         domain: ["tourist", "seasonal"],
         range: [cssVar("--tourist"), cssVar("--seasonal")],
@@ -92,18 +93,31 @@ export function initNightsChart(rows: NightsRow[], legalLine: number): void {
     });
     plot.setAttribute(
       "aria-label",
-      `Bar chart: share of active ${CITY_LABELS[city]} listings by minimum stay, ${round}.`,
+      `Bar chart: share of ${CITY_LABELS[city]} ${POPULATION} by minimum stay, ${round}.`,
     );
     return plot;
   }
 
+  /** The 31+ share under three definitions of the population (latest snapshot). */
+  function updateRobustness(): void {
+    const check = cities.find((c) => c.city === city)?.availability_sensitivity;
+    if (!check) return;
+    const { open_dates: open, open_dates_or_reviewed_12m: reviewed, all_listings: all } = check;
+    robustness.textContent =
+      `Does the population matter? Among listings with a known minimum stay (latest snapshot), the 31+ share is ` +
+      `${formatPct(open.month_plus_pct)} for ${POPULATION}, ${formatPct(reviewed.month_plus_pct)} adding listings reviewed in the last 12 months, ` +
+      `and ${formatPct(all.month_plus_pct)} for every listing. ` +
+      `${formatInt(all.unknown_minimum_stay)} listings have no minimum stay on file and are left out, not counted as short stays.`;
+  }
+
   function updateReadout(shown: Bar[], total: number, beyond: number): void {
+    updateRobustness();
     const touristSide = shown.filter((b) => b.side === "tourist").reduce((s, b) => s + b.listings, 0);
     const nearLine = shown.filter((b) => b.nights === line || b.nights === line + 1).reduce((s, b) => s + b.listings, 0);
     readout.replaceChildren(
       document.createTextNode(`${CITY_LABELS[city]}, ${round}: with the line after ${line} nights, `),
       el("span", { class: "tourist" }, formatPct((touristSide / total) * 100)),
-      document.createTextNode(" of active listings are on the short side and "),
+      document.createTextNode(` of ${POPULATION} are on the short side and `),
       el("span", { class: "seasonal" }, formatPct(((total - touristSide) / total) * 100)),
       document.createTextNode(
         ` on the long side${beyond ? ` (${formatInt(beyond)} ask more than ${MAX_NIGHTS_SHOWN} nights)` : ""}. ` +

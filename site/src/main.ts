@@ -23,7 +23,7 @@ import { initLevers } from "./levers";
 import { initRegister } from "./register";
 import { initRents } from "./rents";
 import { initNightsChart } from "./nightsChart";
-import { el, formatPct, requireElement } from "./ui";
+import { el, formatPct, POPULATION, requireElement } from "./ui";
 
 const LATEST_ROUND = "Sep 2026";
 
@@ -37,7 +37,7 @@ function renderHeroStats(cities: CityRow[], register: Register): void {
   if (!barcelona || others.length === 0 || !match) return;
 
   const tiles: [string, string][] = [
-    [formatPct(barcelona.share_month_plus, 0), `of Barcelona's active listings ask for 31 nights or more (${LATEST_ROUND})`],
+    [formatPct(barcelona.share_month_plus, 0), `of Barcelona's ${POPULATION} ask for 31 nights or more (${LATEST_ROUND})`],
     [
       `${Math.round(Math.min(...others))}–${Math.round(Math.max(...others))}%`,
       `in ${CITIES.filter((c) => c !== "barcelona").map((c) => CITY_LABELS[c]).join(", ")}`,
@@ -109,7 +109,7 @@ async function main(): Promise<void> {
   const [meta, nights, cities, register] = await Promise.all([loadMeta(), loadNights(), loadCities(), loadRegister()]);
   renderHeroStats(cities, register);
   renderFooter(meta);
-  initNightsChart(nights, meta.max_tourist_nights);
+  initNightsChart(nights, meta.max_tourist_nights, cities);
   loadMapWhenNear(meta.snapshots.barcelona);
 
   // The sections below the map: small files, loaded together.

@@ -3,7 +3,7 @@ import * as Plot from "@observablehq/plot";
 
 import { mountChart, plotStyle } from "./charts";
 import { CITIES, CITY_LABELS, type CityRow, type SnapshotSummary } from "./data";
-import { cssVar, requireElement, segmented } from "./ui";
+import { cssVar, formatDay, POPULATION, requireElement, segmented } from "./ui";
 
 const FIRST_ROUND = "Dec 2025";
 const LAST_ROUND = "Sep 2026";
@@ -22,27 +22,27 @@ interface MeasureInfo {
 const MEASURES: Record<Measure, MeasureInfo> = {
   share_month_plus: {
     label: "31+ nights",
-    axis: "% of active listings asking 31+ nights →",
+    axis: `% of ${POPULATION} asking 31+ nights →`,
     note: "Month-plus listings are a neutral, city-independent measure: the legal tourist/seasonal line differs between regions.",
   },
   share_31_nights: {
     label: "Exactly 31",
-    axis: "% of active listings asking exactly 31 nights →",
+    axis: `% of ${POPULATION} asking exactly 31 nights →`,
     note: "31 nights sits on the Catalan legal line. Outside Catalonia it has no special legal meaning.",
   },
   share_tourist_licence: {
     label: "Tourist licence",
-    axis: "% of active listings showing a tourist-flat licence →",
+    axis: `% of ${POPULATION} showing a tourist-flat licence →`,
     note: "Outside Catalonia this is a lower bound: only confirmed regional codes are counted. Airbnb's licence form also changed in June 2026, in every city.",
   },
   share_professional: {
-    label: "Hosts with 5+",
-    axis: "% of active listings run by hosts with 5+ listings →",
-    note: "A host's listing count is per city, as reported by Inside Airbnb.",
+    label: "Accounts with 5+",
+    axis: `% of ${POPULATION} run by host accounts with 5+ listings →`,
+    note: "A host account's listing count is per city, as reported by Inside Airbnb. An account is not necessarily one owner or one company.",
   },
   share_entire_home: {
     label: "Entire homes",
-    axis: "% of active listings that are entire homes →",
+    axis: `% of ${POPULATION} that are entire homes →`,
     note: "The rest are private rooms, shared rooms and hotel rooms.",
   },
   median_price: {
@@ -62,6 +62,12 @@ export function initCities(cities: CityRow[]): void {
   const controls = requireElement("cities-controls");
   const chart = requireElement("cities-chart");
   const note = requireElement("cities-note");
+
+  // The five cities were not scraped on the same days: say which days.
+  const scrapeDates = CITIES.map((city) => {
+    const dates = cities.find((c) => c.city === city)?.scrape_dates ?? {};
+    return `${CITY_LABELS[city]} ${formatDay(dates[FIRST_ROUND] ?? "")} / ${formatDay(dates[LAST_ROUND] ?? "")}`;
+  }).join("; ");
 
   let measure: Measure = "share_month_plus";
   let render = () => {};
@@ -113,7 +119,7 @@ export function initCities(cities: CityRow[]): void {
       ],
     });
     plot.setAttribute("aria-label", `Dot chart: ${MEASURES[measure].axis.replace(" →", "")}, by city, ${FIRST_ROUND} and ${LAST_ROUND}.`);
-    note.textContent = MEASURES[measure].note;
+    note.textContent = `${MEASURES[measure].note} Scrape dates: ${scrapeDates}.`;
     return plot;
   }
 
