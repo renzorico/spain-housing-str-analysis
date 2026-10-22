@@ -158,3 +158,71 @@ def availability_sensitivity(df: pd.DataFrame) -> dict:
             "month_plus_pct": share(known["minimum_nights"] >= cfg.MAX_TOURIST_NIGHTS),
         }
     return result
+
+
+BOOTSTRAP_DRAWS = 3000
+CI_PERCENTILES = (2.5, 97.5)
+
+
+def exit_gap_cohort(earlier: pd.DataFrame, later: pd.DataFrame) -> pd.DataFrame:
+    """One row per host account: how many of its listings with open dates in
+    `earlier` were month-plus / shorter, and how many of each are absent from
+    `later`. Columns: month_n, month_gone, short_n, short_gone.
+
+    A listing without a host id is its own account, so missing ids never
+    glue unrelated listings together.
+    """
+    cohort = active(earlier).copy()
+    cohort["month_plus"] = cohort["minimum_nights"] >= cfg.MAX_TOURIST_NIGHTS
+    cohort["gone"] = ~cohort["id"].isin(later["id"])
+    unknown = cohort["host_id"].isna()
+    cohort.loc[unknown, "host_id"] = -1 - np.arange(int(unknown.sum()))
+    cohort["month_gone"] = cohort["month_plus"] & cohort["gone"]
+    cohort["short_gone"] = ~cohort["month_plus"] & cohort["gone"]
+    cohort["short_plus"] = ~cohort["month_plus"]
+    accounts = cohort.groupby("host_id").agg(
+        month_n=("month_plus", "sum"),
+        month_gone=("month_gone", "sum"),
+        short_n=("short_plus", "sum"),
+        short_gone=("short_gone", "sum"),
+    )
+    return accounts.astype(int)
+
+
+def _gap(totals: np.ndarray) -> float:
+    month_n, month_gone, short_n, short_gone = totals
+    return 100 * (month_gone / month_n - short_gone / short_n)
+
+
+def exit_gap_draws(accounts: pd.DataFrame, draws: int = BOOTSTRAP_DRAWS, seed: int = cfg.SEED) -> np.ndarray:
+    """Bootstrap draws of the exit gap, resampling whole host accounts.
+
+    One operator can withdraw many listings together, so listings are not
+    independent; resampling accounts keeps that dependence. This is a
+    sensitivity estimate of sampling variation. It does not cover scrape
+    omissions, platform changes or confounding, and it is not an estimate of
+    any policy's effect.
+    """
+    counts = accounts[["month_n", "month_gone", "short_n", "short_gone"]].to_numpy()
+    rng = np.random.default_rng(seed)
+    gaps = np.empty(draws)
+    for i in range(draws):
+        gaps[i] = _gap(counts[rng.integers(0, len(counts), len(counts))].sum(axis=0))
+    return gaps
+
+
+def percentile_interval(values: np.ndarray) -> tuple[float, float]:
+    low, high = np.percentile(values, CI_PERCENTILES)
+    return round(float(low), 1), round(float(high), 1)
+
+
+def contrast_draws(first: np.ndarray, second: np.ndarray) -> np.ndarray:
+    """Draws of (first gap - second gap) for two cities. Their host accounts
+    are separate, so the two bootstrap streams are independent."""
+    return first - second
+
+
+def top_account_share(accounts: pd.DataFrame, top: int = 10) -> float:
+    """Share of month-plus listings held by the `top` largest accounts."""
+    by_account = accounts["month_n"].sort_values(ascending=False)
+    return round(float(by_account.head(top).sum() / by_account.sum()) * 100, 1)

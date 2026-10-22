@@ -80,3 +80,26 @@ def test_availability_sensitivity_keeps_unknown_stays_apart():
     assert result["open_dates_or_reviewed_12m"]["known_minimum_stay"] == 2
     assert result["all_listings"]["month_plus_pct"] == 50.0
     assert result["all_listings"]["known_minimum_stay"] == 4
+
+
+def test_account_bootstrap_is_wider_when_one_account_holds_the_listings():
+    # 20 single-listing accounts, then the same listings held by 2 accounts
+    spread = pd.DataFrame({"month_n": [1] * 20, "month_gone": [1] * 10 + [0] * 10,
+                           "short_n": [1] * 20, "short_gone": [0] * 20})
+    clustered = pd.DataFrame({"month_n": [10, 10], "month_gone": [10, 0],
+                              "short_n": [10, 10], "short_gone": [0, 0]})
+    low_s, high_s = metrics.percentile_interval(metrics.exit_gap_draws(spread, draws=500))
+    low_c, high_c = metrics.percentile_interval(metrics.exit_gap_draws(clustered, draws=500))
+    assert (high_c - low_c) > (high_s - low_s)
+
+
+def test_exit_gap_cohort_counts_accounts_and_missing_hosts():
+    earlier = pd.DataFrame({
+        "id": [1, 2, 3, 4], "host_id": [7, 7, 8, float("nan")],
+        "is_active": [True] * 4, "minimum_nights": [31.0, 2.0, 40.0, 2.0],
+    })
+    later = pd.DataFrame({"id": [2, 3]})
+    accounts = metrics.exit_gap_cohort(earlier, later)
+    assert len(accounts) == 3                       # accounts 7, 8 and the unknown host
+    assert accounts["month_n"].sum() == 2 and accounts["month_gone"].sum() == 1
+    assert accounts["short_n"].sum() == 2 and accounts["short_gone"].sum() == 1
