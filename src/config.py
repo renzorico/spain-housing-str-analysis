@@ -18,8 +18,9 @@ FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 SNAPSHOT_DATE = "2026-09-17"
 
 # ---- cleaning thresholds ---------------------------------------------
-# Same cap as the Berlin project; re-check against the 99th percentile
-# of the Barcelona file in notebook 01.
+# Same cap as the Berlin project, kept for comparability. In Barcelona it
+# removes 295 listings (2.7% of priced ones), almost all tourist entire
+# homes; the 99th percentile is ~2,000 EUR.
 MAX_PRICE = 1000
 
 # In Catalonia a stay of 31 days or fewer is tourist use and needs an HUT

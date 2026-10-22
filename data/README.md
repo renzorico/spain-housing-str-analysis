@@ -32,10 +32,22 @@ Full definitions: [official data dictionary](https://docs.google.com/spreadsheet
 ## Privacy: the `license` column
 
 Under EU rules this column can contain real host **names and home
-addresses**. Never print or commit its raw contents. The project reads it
-in exactly one function (`cleaning.licence_type`) and works only with safe
-categories: `hut` / `nrua` / `exempt` / `company` / `person` / `other` /
-`missing`.
+addresses**. Never print or commit its raw contents.
+
+In the Barcelona file it holds up to two labelled sections, separated by
+`<br />`: a **regional** (Catalan) one and a **national** (NRUA) one. The
+project reads it only in `cleaning.regional_licence` and
+`cleaning.national_licence`, and works only with the safe categories they
+return:
+
+| Column | Categories |
+|---|---|
+| `regional_licence` | `hut` (tourist flat, `HUTB-`) · `hotel_or_hostel` (`HB`, `AJ`, `ATB`) · `exempt_seasonal` · `exempt_other` · `missing` · `other` |
+| `national_licence` | `nrua_tourist` (code `ES..TU`) · `nrua_seasonal` (code `ES..NT`, declared non-tourist) · `exempt` · `missing` · `other` |
+
+`minimum_nights` is missing on ~2,000 rows; all of them have no open dates.
+They are dropped in cleaning because they cannot be placed on either side
+of the 31-night line.
 
 ## Attribution
 
