@@ -276,12 +276,27 @@ def concentration(snapshots: dict) -> dict:
     }
 
 
-def neighbourhoods(snapshots: dict) -> tuple[list, dict]:
-    """Per-neighbourhood table and the matching outlines (Barcelona, latest)."""
+def polygons_of(geometry: dict) -> list:
+    """The polygons of a Polygon or MultiPolygon geometry."""
+    if geometry["type"] == "Polygon":
+        return [geometry["coordinates"]]
+    return list(geometry["coordinates"])
+
+
+def neighbourhoods(snapshots: dict) -> tuple[list, dict, dict]:
+    """One row and one outline per neighbourhood (Barcelona, latest snapshot),
+    plus a reconciliation of the totals.
+
+    The source geojson splits some neighbourhoods into several pieces
+    (Vallvidrera has three). Pieces are merged into one MultiPolygon so each
+    neighbourhood is counted once. Register records whose neighbourhood has no
+    outline are reported in the reconciliation, never dropped silently.
+    """
     latest_quarter = list(src.HUT_REGISTER_URLS)[-1]
     act = metrics.active(snapshots[("barcelona", src.SNAPSHOTS["barcelona"][-1])])
     key = act["neighbourhood"].map(official.normalise_place_name)
     priced = act["price"].where(act["price"].between(1, cfg.MAX_PRICE))
+    register_counts = official.hut_counts_by_neighbourhood(latest_quarter)
     table = pd.DataFrame(
         {
             "active_listings": act.groupby(key)["id"].count(),
@@ -294,13 +309,19 @@ def neighbourhoods(snapshots: dict) -> tuple[list, dict]:
             ),
             "median_price": priced.groupby(key).median().round(0),
         }
-    ).join(official.hut_counts_by_neighbourhood(latest_quarter), how="outer")
+    ).join(register_counts, how="outer")
 
     geo = json.loads(src.neighbourhoods_path("barcelona").read_text())
-    rows = []
+    pieces: dict[str, dict] = {}
     for feature in geo["features"]:
         props = feature["properties"]
         name_key = official.normalise_place_name(props["neighbourhood"])
+        entry = pieces.setdefault(name_key, {"props": props, "polygons": []})
+        entry["polygons"].extend(polygons_of(feature["geometry"]))
+
+    rows, features = [], []
+    for name_key, entry in pieces.items():
+        props = entry["props"]
         values = (
             table.loc[name_key] if name_key in table.index else pd.Series(dtype=float)
         )
@@ -313,10 +334,30 @@ def neighbourhoods(snapshots: dict) -> tuple[list, dict]:
         for column in ["active_listings", "with_tourist_licence", "registered_huts"]:
             row[column] = int(row[column] or 0)
         rows.append(row)
-        feature["geometry"]["coordinates"] = round_coordinates(
-            feature["geometry"]["coordinates"]
+        features.append(
+            {
+                "type": "Feature",
+                "properties": {
+                    "neighbourhood": props["neighbourhood"],
+                    "neighbourhood_group": props["neighbourhood_group"],
+                },
+                "geometry": {
+                    "type": "MultiPolygon",
+                    "coordinates": round_coordinates(entry["polygons"]),
+                },
+            }
         )
-    return rows, geo
+
+    unplaced = register_counts[~register_counts.index.isin(pieces)]
+    reconciliation = {
+        "listings_total": int(len(act)),
+        "listings_in_neighbourhood_rows": sum(r["active_listings"] for r in rows),
+        "register_total": int(register_counts.sum()),
+        "register_in_neighbourhood_rows": sum(r["registered_huts"] for r in rows),
+        "register_without_known_neighbourhood": int(unplaced.sum()),
+    }
+    outlines = {"type": "FeatureCollection", "features": features}
+    return rows, outlines, reconciliation
 
 
 def round_coordinates(coords):
@@ -325,7 +366,7 @@ def round_coordinates(coords):
     return [round_coordinates(c) for c in coords]
 
 
-def register(snapshots: dict) -> dict:
+def register(snapshots: dict, reconciliation: dict) -> dict:
     latest_quarter = list(src.HUT_REGISTER_URLS)[-1]
     numbers = official.registered_hut_numbers(latest_quarter)
     match = []
@@ -351,6 +392,7 @@ def register(snapshots: dict) -> dict:
         "register_quarter": latest_quarter,
         "totals": official.hut_totals().to_dict(),
         "match": match,
+        "neighbourhood_reconciliation": reconciliation,
     }
 
 
@@ -381,10 +423,10 @@ def main() -> None:
     write_json("transitions.json", transitions(snapshots))
     write_json("cities.json", cities(snapshots))
     write_json("concentration.json", concentration(snapshots))
-    table, outlines = neighbourhoods(snapshots)
+    table, outlines, reconciliation = neighbourhoods(snapshots)
     write_json("neighbourhoods.json", table)
     write_json("neighbourhoods.geojson", outlines)
-    write_json("register.json", register(snapshots))
+    write_json("register.json", register(snapshots, reconciliation))
     write_json("rents.json", rents())
 
 
