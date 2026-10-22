@@ -29,9 +29,9 @@ interface Category {
 // Legend order and colours per mode, keyed by the code in the export.
 const CATEGORIES: Record<ColourMode, Record<string, Category>> = {
   band: {
-    tourist: { label: "Tourist (< 31 nights)", colourVar: "--tourist" },
-    boundary: { label: "Boundary (31 nights)", colourVar: "--boundary" },
-    seasonal: { label: "Seasonal (> 31 nights)", colourVar: "--seasonal" },
+    under_31: { label: "Under 31 nights", colourVar: "--tourist" },
+    exactly_31: { label: "Exactly 31 nights", colourVar: "--boundary" },
+    over_31: { label: "Over 31 nights", colourVar: "--seasonal" },
   },
   licence: {
     tourist_flat: { label: "Tourist licence", colourVar: "--tourist" },
@@ -55,7 +55,7 @@ const CATEGORIES: Record<ColourMode, Record<string, Category>> = {
 const PROPERTY: Record<ColourMode, "b" | "l" | "h"> = { band: "b", licence: "l", host: "h" };
 
 const MODE_OPTIONS: { value: ColourMode; label: string }[] = [
-  { value: "band", label: "Stay type" },
+  { value: "band", label: "Minimum stay" },
   { value: "licence", label: "Licence shown" },
   { value: "host", label: "Host size" },
 ];

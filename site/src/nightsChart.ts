@@ -1,9 +1,11 @@
-// "Where would you draw the line?" - minimum-stay distribution with a
-// movable legal line.
+// "Where would you draw the line?" - minimum-stay distribution. Bars are
+// coloured by what listings ask (under / exactly / over the 31-night limit),
+// the legal limit is a fixed marker, and the reader's own cutoff is a
+// separate, labelled exploration line.
 import * as Plot from "@observablehq/plot";
 
 import { mountChart, plotStyle } from "./charts";
-import { CITIES, CITY_LABELS, type City, type CityRow, type NightsRow } from "./data";
+import { CITIES, CITY_LABELS, type Band, type City, type CityRow, type NightsRow } from "./data";
 import { cssVar, el, formatInt, formatPct, POPULATION, requireElement, segmented } from "./ui";
 
 const MAX_NIGHTS_SHOWN = 60; // longer minimum stays are summarised in the readout
@@ -15,10 +17,10 @@ interface Bar {
   listings: number;
   share: number;
   medianPrice: number | null;
-  side: "tourist" | "seasonal";
+  band: Band;
 }
 
-export function initNightsChart(rows: NightsRow[], legalLine: number, cities: CityRow[]): void {
+export function initNightsChart(rows: NightsRow[], stayLine: number, cities: CityRow[]): void {
   const chart = requireElement<HTMLDivElement>("nights-chart");
   const controls = requireElement<HTMLDivElement>("nights-controls");
   const readout = requireElement<HTMLParagraphElement>("nights-readout");
@@ -28,8 +30,10 @@ export function initNightsChart(rows: NightsRow[], legalLine: number, cities: Ci
 
   let city: City = "barcelona";
   let round = roundsFor(city).at(-1) ?? "";
-  let line = legalLine;
+  let cutoff = stayLine; // the reader's exploration cutoff; starts at the legal limit
   let render = () => {}; // replaced by mountChart below
+
+  const bandOf = (nights: number): Band => (nights < stayLine ? "under_31" : nights === stayLine ? "exactly_31" : "over_31");
 
   function bars(): { shown: Bar[]; total: number; beyond: number } {
     const selected = rows.filter((r) => r.city === city && r.round === round);
@@ -41,7 +45,7 @@ export function initNightsChart(rows: NightsRow[], legalLine: number, cities: Ci
         listings: r.listings,
         share: (r.listings / total) * 100,
         medianPrice: r.median_price,
-        side: r.nights <= line ? ("tourist" as const) : ("seasonal" as const),
+        band: bandOf(r.nights),
       }));
     const beyond = selected.filter((r) => r.nights > MAX_NIGHTS_SHOWN).reduce((sum, r) => sum + r.listings, 0);
     return { shown, total, beyond };
@@ -68,20 +72,31 @@ export function initNightsChart(rows: NightsRow[], legalLine: number, cities: Ci
         label: "minimum stay (nights) →",
         type: "band",
         domain: Array.from({ length: MAX_NIGHTS_SHOWN }, (_, i) => i + 1),
-        // Label 1, the line itself, and round numbers that are not so close
-        // to the line that the labels collide.
+        // Label 1, the legal limit, the cutoff, and round numbers that are not
+        // so close to either that the labels collide.
         tickFormat: (n: number) =>
-          n === 1 || n === line || (n % tickStep === 0 && Math.abs(n - line) > 2) ? String(n) : "",
+          n === 1 ||
+          n === stayLine ||
+          n === cutoff ||
+          (n % tickStep === 0 && Math.abs(n - stayLine) > 2 && Math.abs(n - cutoff) > 2)
+            ? String(n)
+            : "",
         padding: 0.12,
       },
       y: { label: `↑ % of ${POPULATION}`, grid: true, nice: true },
       color: {
-        domain: ["tourist", "seasonal"],
-        range: [cssVar("--tourist"), cssVar("--seasonal")],
+        domain: ["under_31", "exactly_31", "over_31"],
+        range: [cssVar("--tourist"), cssVar("--boundary"), cssVar("--seasonal")],
       },
       marks: [
-        Plot.barY(shown, { x: "nights", y: "share", fill: "side" }),
-        Plot.ruleX([line], {
+        Plot.barY(shown, { x: "nights", y: "share", fill: "band" }),
+        // Fixed: the Catalan tourist-stay limit (what it means is explained under the chart).
+        Plot.text(
+          shown.filter((b) => b.nights === stayLine),
+          { x: "nights", y: "share", text: () => `Catalan tourist-stay limit: ${stayLine} days →`, textAnchor: "end", dx: -6, fill: cssVar("--muted") },
+        ),
+        // Movable: the reader's own cutoff, drawn between two bars.
+        Plot.ruleX([cutoff], {
           x: (n: number) => n,
           dx: width / MAX_NIGHTS_SHOWN / 2,
           stroke: cssVar("--text"),
@@ -112,16 +127,16 @@ export function initNightsChart(rows: NightsRow[], legalLine: number, cities: Ci
 
   function updateReadout(shown: Bar[], total: number, beyond: number): void {
     updateRobustness();
-    const touristSide = shown.filter((b) => b.side === "tourist").reduce((s, b) => s + b.listings, 0);
-    const nearLine = shown.filter((b) => b.nights === line || b.nights === line + 1).reduce((s, b) => s + b.listings, 0);
+    const atOrBelow = shown.filter((b) => b.nights <= cutoff).reduce((s, b) => s + b.listings, 0);
+    const nearCutoff = shown.filter((b) => b.nights === cutoff || b.nights === cutoff + 1).reduce((s, b) => s + b.listings, 0);
     readout.replaceChildren(
-      document.createTextNode(`${CITY_LABELS[city]}, ${round}: with the line after ${line} nights, `),
-      el("span", { class: "tourist" }, formatPct((touristSide / total) * 100)),
-      document.createTextNode(` of ${POPULATION} are on the short side and `),
-      el("span", { class: "seasonal" }, formatPct(((total - touristSide) / total) * 100)),
+      document.createTextNode(`${CITY_LABELS[city]}, ${round}. With your exploration cutoff after ${cutoff} nights: `),
+      el("strong", {}, formatPct((atOrBelow / total) * 100)),
+      document.createTextNode(` of ${POPULATION} ask ${cutoff} nights or fewer and `),
+      el("strong", {}, formatPct(((total - atOrBelow) / total) * 100)),
       document.createTextNode(
-        ` on the long side${beyond ? ` (${formatInt(beyond)} ask more than ${MAX_NIGHTS_SHOWN} nights)` : ""}. ` +
-          `${formatPct((nearLine / total) * 100)} sit within one night of the line (${line} or ${line + 1}).`,
+        ` ask more${beyond ? ` (${formatInt(beyond)} ask more than ${MAX_NIGHTS_SHOWN} nights)` : ""}. ` +
+          `${formatPct((nearCutoff / total) * 100)} sit within one night of your cutoff (${cutoff} or ${cutoff + 1}).`,
       ),
     );
   }
@@ -142,19 +157,19 @@ export function initNightsChart(rows: NightsRow[], legalLine: number, cities: Ci
   }
 
   const sliderGroup = el("div", { class: "control-group wide" });
-  const sliderLabel = el("label", { class: "control-label", for: "line-slider" }, "Draw the line after … nights");
+  const sliderLabel = el("label", { class: "control-label", for: "line-slider" }, "Exploration cutoff: after … nights");
   const slider = el("input", {
     id: "line-slider",
     type: "range",
     min: "1",
     max: String(MAX_NIGHTS_SHOWN - 1),
     step: "1",
-    value: String(line),
+    value: String(cutoff),
   });
-  const output = el("output", { for: "line-slider" }, `${line}`);
+  const output = el("output", { for: "line-slider" }, `${cutoff}`);
   slider.addEventListener("input", () => {
-    line = Number(slider.value);
-    output.textContent = `${line}`;
+    cutoff = Number(slider.value);
+    output.textContent = `${cutoff}`;
     render();
   });
   const sliderRow = el("div", { class: "slider-row" });

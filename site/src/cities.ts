@@ -23,7 +23,7 @@ const MEASURES: Record<Measure, MeasureInfo> = {
   share_month_plus: {
     label: "31+ nights",
     axis: `% of ${POPULATION} asking 31+ nights →`,
-    note: "Month-plus listings are a neutral, city-independent measure: the legal tourist/seasonal line differs between regions.",
+    note: "31+ nights is a common measurement threshold, not a legal rule shared by every region: the legal lines differ between regions.",
   },
   share_31_nights: {
     label: "Exactly 31",

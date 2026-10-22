@@ -66,7 +66,7 @@ function dataShows(id: string, { meta, register, rents, trends, cities }: Inputs
       if (!first || !second || !last || barcelona === undefined || others.length === 0) return "";
       return (
         `${formatPct(barcelona, 0)} of Barcelona's ${POPULATION} ask 31+ nights, vs ${Math.round(Math.min(...others))}–${Math.round(Math.max(...others))}% in ${CITIES.filter((c) => c !== "barcelona").map((c) => CITY_LABELS[c]).join(", ")}. ` +
-        `Seasonal-band listings went from ${formatInt(first.bands.seasonal)} (${formatQuarter(first.snapshot)}) to ${formatInt(second.bands.seasonal)} (${formatQuarter(second.snapshot)}) and ${formatInt(last.bands.seasonal)} (${formatQuarter(last.snapshot)}). ` +
+        `Listings asking over 31 nights went from ${formatInt(first.bands.over_31)} (${formatQuarter(first.snapshot)}) to ${formatInt(second.bands.over_31)} (${formatQuarter(second.snapshot)}) and ${formatInt(last.bands.over_31)} (${formatQuarter(last.snapshot)}). ` +
         `Month-plus listings were clearly more likely than shorter-stay ones to be absent from the later scrape in ${clearGapCities.length} of 5 cities (${clearGapCities.join(", ")}; host-account intervals above zero), and Barcelona's gap cannot be told apart from any other city's.`
       );
     }

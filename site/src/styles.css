@@ -1,6 +1,9 @@
 /* Design tokens. Category colours are the same three everywhere:
    tourist / boundary / seasonal. Picked for contrast in both themes and
    for colour-blind readers (blue / grey / orange). */
+/* Token names --tourist / --boundary / --seasonal are historical: they colour
+   the three minimum-stay groups (under 31, exactly 31, over 31 nights), which
+   are observed settings and not legal classes. */
 :root {
   --bg: #fbfaf7;
   --surface: #ffffff;
@@ -241,15 +244,6 @@ input[type="range"] {
   font-variant-numeric: tabular-nums;
 }
 
-.readout .tourist {
-  color: var(--tourist);
-  font-weight: 600;
-}
-
-.readout .seasonal {
-  color: var(--seasonal);
-  font-weight: 600;
-}
 
 /* ---- map ---- */
 .map-wrap {

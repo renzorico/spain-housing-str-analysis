@@ -52,7 +52,7 @@ export interface Meta {
   observation_window: [string, string];
   post_observation_developments: LaterDevelopment[];
   context_events: Record<string, string>;
-  max_tourist_nights: number;
+  stay_line_nights: number;
   sources: Source[];
   caveats: string[];
 }
@@ -169,7 +169,8 @@ export interface Register {
   neighbourhood_reconciliation: NeighbourhoodReconciliation;
 }
 
-export const BANDS = ["tourist", "boundary", "seasonal"] as const;
+// Minimum stay asked, against the 31-night line. Observed settings, not legal classes.
+export const BANDS = ["under_31", "exactly_31", "over_31"] as const;
 export type Band = (typeof BANDS)[number];
 
 /** Where one snapshot's listings with open dates were in a later snapshot. */

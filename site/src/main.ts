@@ -109,7 +109,7 @@ async function main(): Promise<void> {
   const [meta, nights, cities, register] = await Promise.all([loadMeta(), loadNights(), loadCities(), loadRegister()]);
   renderHeroStats(cities, register);
   renderFooter(meta);
-  initNightsChart(nights, meta.max_tourist_nights, cities);
+  initNightsChart(nights, meta.stay_line_nights, cities);
   loadMapWhenNear(meta.snapshots.barcelona);
 
   // The sections below the map: small files, loaded together.

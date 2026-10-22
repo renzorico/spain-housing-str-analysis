@@ -6,9 +6,9 @@ import { BANDS, CITIES, CITY_LABELS, type Band, type City, type CityRow, type Tr
 import { cssVar, el, formatInt, formatPct, formatQuarter, POPULATION, requireElement, segmented } from "./ui";
 
 const BAND_LABELS: Record<Band, string> = {
-  tourist: "Tourist (<31)",
-  boundary: "Boundary (31)",
-  seasonal: "Seasonal (>31)",
+  under_31: "Under 31",
+  exactly_31: "Exactly 31",
+  over_31: "Over 31",
 };
 
 const OUTCOMES = ["same band", "other band", "listed, no open dates", "absent from later scrape"] as const;
