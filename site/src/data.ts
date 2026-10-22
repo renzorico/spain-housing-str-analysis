@@ -92,10 +92,19 @@ export interface RegisterMatch {
   numbers_on_2plus_listings: number;
 }
 
+export interface NeighbourhoodReconciliation {
+  listings_total: number;
+  listings_in_neighbourhood_rows: number;
+  register_total: number;
+  register_in_neighbourhood_rows: number;
+  register_without_known_neighbourhood: number;
+}
+
 export interface Register {
   register_quarter: string;
   totals: Record<string, number>;
   match: RegisterMatch[];
+  neighbourhood_reconciliation: NeighbourhoodReconciliation;
 }
 
 export const BANDS = ["tourist", "boundary", "seasonal"] as const;

@@ -47,3 +47,27 @@ def test_map_points_have_equal_length_columns():
         points = json.loads(path.read_text())
         columns = {k: len(v) for k, v in points.items() if k != "legend"}
         assert len(set(columns.values())) == 1, (path.name, columns)
+
+
+def load(name):
+    return json.loads((DATA_DIR / name).read_text())
+
+
+def test_neighbourhoods_are_unique_and_every_one_has_an_outline():
+    rows = load("neighbourhoods.json")
+    names = [r["neighbourhood"] for r in rows]
+    assert len(names) == len(set(names)), "a neighbourhood appears more than once"
+    outlines = [f["properties"]["neighbourhood"] for f in load("neighbourhoods.geojson")["features"]]
+    assert sorted(outlines) == sorted(names)
+
+
+def test_neighbourhood_totals_reconcile_with_the_city_totals():
+    rows = load("neighbourhoods.json")
+    rec = load("register.json")["neighbourhood_reconciliation"]
+    barcelona = next(c for c in load("cities.json") if c["city"] == "barcelona")
+    latest_listings = barcelona["rounds"]["Sep 2026"]["active"]
+    assert sum(r["active_listings"] for r in rows) == latest_listings == rec["listings_total"]
+    assert (
+        sum(r["registered_huts"] for r in rows) + rec["register_without_known_neighbourhood"]
+        == rec["register_total"]
+    )

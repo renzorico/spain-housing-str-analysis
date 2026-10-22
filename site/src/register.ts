@@ -33,7 +33,24 @@ export function initRegister(register: Register, places: NeighbourhoodRow[]): vo
   );
 
   const data = places.filter((p) => p.active_listings > 0 || p.registered_huts > 0);
+  // A neighbourhood with no listings has no share of long minimum stays: it
+  // is drawn as "no data", never as 0%.
+  const withShare = data.filter((p) => p.share_month_plus !== null);
+  const noShare = data.filter((p) => p.share_month_plus === null);
   const top = Math.max(...data.map((p) => Math.max(p.active_listings, p.registered_huts)));
+
+  const rec = register.neighbourhood_reconciliation;
+  requireElement("register-reconciliation").textContent =
+    `${formatInt(rec.register_without_known_neighbourhood)} of the ${formatInt(rec.register_total)} registered flats have no known neighbourhood and are not on the chart. ` +
+    `All ${formatInt(rec.listings_total)} listings are placed.`;
+
+  const tipText = (p: NeighbourhoodRow) =>
+    [
+      `${p.neighbourhood} (${p.district})`,
+      `${formatInt(p.registered_huts)} registered flats`,
+      `${formatInt(p.active_listings)} active listings, ${formatInt(p.with_tourist_licence)} showing a licence`,
+      p.share_month_plus === null ? "no listings: share of 31+ nights is not defined" : `${formatPct(p.share_month_plus, 0)} ask 31+ nights`,
+    ].join("\n");
 
   mountChart(requireElement("register-chart"), (width) => {
     const plot = Plot.plot({
@@ -51,23 +68,24 @@ export function initRegister(register: Register, places: NeighbourhoodRow[]): vo
       },
       marks: [
         Plot.line([[0, 0], [top, top]], { stroke: cssVar("--muted"), strokeDasharray: "3,3" }),
-        Plot.dot(data, {
+        Plot.dot(withShare, {
           x: "registered_huts",
           y: "active_listings",
-          fill: (p: NeighbourhoodRow) => p.share_month_plus ?? 0,
+          fill: (p: NeighbourhoodRow) => p.share_month_plus,
           r: 5,
           fillOpacity: 0.85,
           stroke: cssVar("--surface"),
           tip: true,
-          title: (p: NeighbourhoodRow) =>
-            [
-              `${p.neighbourhood} (${p.district})`,
-              `${formatInt(p.registered_huts)} registered flats`,
-              `${formatInt(p.active_listings)} active listings, ${formatInt(p.with_tourist_licence)} showing a licence`,
-              p.share_month_plus === null ? "" : `${formatPct(p.share_month_plus, 0)} ask 31+ nights`,
-            ]
-              .filter(Boolean)
-              .join("\n"),
+          title: tipText,
+        }),
+        Plot.dot(noShare, {
+          x: "registered_huts",
+          y: "active_listings",
+          fill: cssVar("--cat-7"),
+          r: 5,
+          stroke: cssVar("--surface"),
+          tip: true,
+          title: tipText,
         }),
       ],
     });
