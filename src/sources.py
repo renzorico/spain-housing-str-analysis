@@ -9,6 +9,9 @@ from pathlib import Path
 from urllib.parse import quote
 
 RAW_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"
+# Hashes, sizes and retrieval times of every raw file. Small, so unlike the
+# raw data itself it is committed: it ties each export to the exact inputs.
+MANIFEST_PATH = RAW_DIR.parent / "raw_manifest.json"
 
 # ---- Inside Airbnb ----------------------------------------------------
 # Quarterly snapshots kept on the public site (Dec 2025 - Sep 2026).

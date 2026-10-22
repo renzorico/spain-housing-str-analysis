@@ -11,6 +11,7 @@ the output for forbidden fields.
 Run with:  python scripts/export_site_data.py
 """
 
+import hashlib
 import json
 import sys
 from datetime import date
@@ -100,9 +101,20 @@ def host_size(count: pd.Series) -> pd.Series:
 # ---- datasets ----------------------------------------------------------
 
 
+def provenance() -> dict:
+    """Tie this export to its inputs: the raw-data manifest and the config."""
+    manifest = src.MANIFEST_PATH.read_bytes() if src.MANIFEST_PATH.exists() else b""
+    return {
+        "raw_manifest_sha256": hashlib.sha256(manifest).hexdigest() if manifest else None,
+        "raw_files": len(json.loads(manifest)) if manifest else 0,
+        "config_sha256": hashlib.sha256((cfg.PROJECT_ROOT / "src" / "config.py").read_bytes()).hexdigest(),
+    }
+
+
 def meta() -> dict:
     return {
         "generated": date.today().isoformat(),
+        "provenance": provenance(),
         "snapshots": src.SNAPSHOTS,
         "policy_levers": cfg.POLICY_LEVERS,
         "levers_as_of": cfg.LEVERS_AS_OF,

@@ -1,0 +1,170 @@
+[
+  {
+    "path": "hut_register/2025_1T.csv.zip",
+    "url": "https://opendata-ajuntament.barcelona.cat/data/dataset/c748799e-1079-44b1-9e60-88d936a3fe70/resource/6cd8682e-c59e-4b47-84f6-2cc15d3f4188/download",
+    "bytes": 1452978,
+    "sha256": "83863333f0ec284e60c2ce5148691a04c4a958a0d5f9a83f1f14e6eae7dca628",
+    "retrieved_at": "2026-10-22T12:54:02+00:00"
+  },
+  {
+    "path": "hut_register/2025_2T.csv.zip",
+    "url": "https://opendata-ajuntament.barcelona.cat/data/dataset/c748799e-1079-44b1-9e60-88d936a3fe70/resource/d92e7521-c94c-4f97-8a23-4b8b3c4825ec/download",
+    "bytes": 1460303,
+    "sha256": "7ba6e8b24e2c9ce9d323ae7e33baa0f35686743e2984e98e29b3de296b7e2d44",
+    "retrieved_at": "2026-10-22T12:54:02+00:00"
+  },
+  {
+    "path": "hut_register/2025_3T.csv.zip",
+    "url": "https://opendata-ajuntament.barcelona.cat/data/dataset/c748799e-1079-44b1-9e60-88d936a3fe70/resource/6b4a2c03-f0c4-479c-b1e9-f0457133a4df/download",
+    "bytes": 1476811,
+    "sha256": "810bf40c5d55eef2f31cb3a283ae7f3ab9ae6e6cd7ef66fb1e56e276cf3fd89e",
+    "retrieved_at": "2026-10-22T12:54:03+00:00"
+  },
+  {
+    "path": "hut_register/2025_4T.csv.zip",
+    "url": "https://opendata-ajuntament.barcelona.cat/data/dataset/c748799e-1079-44b1-9e60-88d936a3fe70/resource/b31a81d8-d578-4ec4-8cce-4f3648a92975/download",
+    "bytes": 1471227,
+    "sha256": "63d0063db7297fde5f2e5f40fe87b3a3bf0c6861b6bb9745e05da8bc0a79f541",
+    "retrieved_at": "2026-10-22T12:54:05+00:00"
+  },
+  {
+    "path": "hut_register/2026_1T.csv.zip",
+    "url": "https://opendata-ajuntament.barcelona.cat/data/dataset/c748799e-1079-44b1-9e60-88d936a3fe70/resource/297cf7da-2b43-4c83-91e2-210bfe5c33e9/download",
+    "bytes": 1482877,
+    "sha256": "8faa17b2948977e8ae5a01ae1dd90ab0712c03393ee68932b51e7210ca691929",
+    "retrieved_at": "2026-10-22T12:54:06+00:00"
+  },
+  {
+    "path": "hut_register/2026_3T.csv.zip",
+    "url": "https://opendata-ajuntament.barcelona.cat/data/dataset/c748799e-1079-44b1-9e60-88d936a3fe70/resource/2214883c-3a56-43f8-b7c5-9ddc42c2ebbe/download",
+    "bytes": 1427201,
+    "sha256": "99d4849f6b517266bfad5fb05408a4f18f13b3f48f1c3198771ae615af1aeb4b",
+    "retrieved_at": "2026-10-22T12:54:07+00:00"
+  },
+  {
+    "path": "insideairbnb/barcelona/2025-12-14/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/catalonia/barcelona/2025-12-14/visualisations/listings.csv",
+    "bytes": 4599171,
+    "sha256": "c5a60f3f9d739fce974c21c72133960a608d2329c8d5b5613de0e16c6ffaaf6a",
+    "retrieved_at": "2026-10-22T12:53:55+00:00"
+  },
+  {
+    "path": "insideairbnb/barcelona/2026-03-21/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/catalonia/barcelona/2026-03-21/visualisations/listings.csv",
+    "bytes": 4568838,
+    "sha256": "0bab8eed6c8ef7517154720996cfcb7a7a3dd818683f4957e14356a66aa5e3de",
+    "retrieved_at": "2026-10-22T12:53:55+00:00"
+  },
+  {
+    "path": "insideairbnb/barcelona/2026-06-24/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/catalonia/barcelona/2026-06-24/visualisations/listings.csv",
+    "bytes": 4768303,
+    "sha256": "385c4ec238ee852c3f93de7b20fadee2d8e4919d8593729d27ec641adf0d9811",
+    "retrieved_at": "2026-10-22T12:53:56+00:00"
+  },
+  {
+    "path": "insideairbnb/barcelona/2026-09-17/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/catalonia/barcelona/2026-09-17/visualisations/listings.csv",
+    "bytes": 4341573,
+    "sha256": "9d76b93ab69685d1699fad31b5ef241d59e79f64f644b7206e3fc60e8fb6df82",
+    "retrieved_at": "2026-10-22T12:22:18+00:00"
+  },
+  {
+    "path": "insideairbnb/barcelona/neighbourhoods.geojson",
+    "url": "https://data.insideairbnb.com/spain/catalonia/barcelona/2026-09-17/visualisations/neighbourhoods.geojson",
+    "bytes": 359194,
+    "sha256": "fab8d5b7b227b3f1aae7030b50e1b82321c5bae7e15a4e3111d91b4f2512528c",
+    "retrieved_at": "2026-10-22T12:53:56+00:00"
+  },
+  {
+    "path": "insideairbnb/madrid/2025-12-14/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/comunidad-de-madrid/madrid/2025-12-14/visualisations/listings.csv",
+    "bytes": 5313083,
+    "sha256": "6f858075896c2983f92bc8ec9795ba78d252c15b53d6c52b732292c7b62cd9a3",
+    "retrieved_at": "2026-10-22T12:53:57+00:00"
+  },
+  {
+    "path": "insideairbnb/madrid/2026-09-17/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/comunidad-de-madrid/madrid/2026-09-17/visualisations/listings.csv",
+    "bytes": 5887496,
+    "sha256": "a8a6556629d6cea31a6d236053a1a5b328cc27bd1862011720dc344b7c6b2eb6",
+    "retrieved_at": "2026-10-22T12:53:57+00:00"
+  },
+  {
+    "path": "insideairbnb/madrid/neighbourhoods.geojson",
+    "url": "https://data.insideairbnb.com/spain/comunidad-de-madrid/madrid/2026-09-17/visualisations/neighbourhoods.geojson",
+    "bytes": 384155,
+    "sha256": "eba4e3ba50a30adb95ae71b83c1ac0d1ace3e18d06c77db26230bd7195ca8c6d",
+    "retrieved_at": "2026-10-22T12:53:57+00:00"
+  },
+  {
+    "path": "insideairbnb/malaga/2025-12-31/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/andaluc%C3%ADa/malaga/2025-12-31/visualisations/listings.csv",
+    "bytes": 2406673,
+    "sha256": "d1ab3d3d2b7a245550e0888c10f1833ca744c99b29b37dcfd102b7e186ec1bbc",
+    "retrieved_at": "2026-10-22T12:53:58+00:00"
+  },
+  {
+    "path": "insideairbnb/malaga/2026-09-28/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/andaluc%C3%ADa/malaga/2026-09-28/visualisations/listings.csv",
+    "bytes": 2718082,
+    "sha256": "ce65f28f31a0bda0c6935a4066387775baa7190c864642abc22f756f1cdc7950",
+    "retrieved_at": "2026-10-22T12:53:59+00:00"
+  },
+  {
+    "path": "insideairbnb/malaga/neighbourhoods.geojson",
+    "url": "https://data.insideairbnb.com/spain/andaluc%C3%ADa/malaga/2026-09-28/visualisations/neighbourhoods.geojson",
+    "bytes": 513962,
+    "sha256": "8b184a6e163fe77c35fa4ec7c3e282da7e152ca7fa892749a3293791788443b9",
+    "retrieved_at": "2026-10-22T12:54:00+00:00"
+  },
+  {
+    "path": "insideairbnb/sevilla/2025-12-30/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/andaluc%C3%ADa/sevilla/2025-12-30/visualisations/listings.csv",
+    "bytes": 2240666,
+    "sha256": "6d94fa0b3379874fe093601a8512a9a752d27f641e015b46a73ef9e0cc5d53b2",
+    "retrieved_at": "2026-10-22T12:54:00+00:00"
+  },
+  {
+    "path": "insideairbnb/sevilla/2026-09-25/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/andaluc%C3%ADa/sevilla/2026-09-25/visualisations/listings.csv",
+    "bytes": 2485878,
+    "sha256": "f3bce6f55b8e2fd0a7ec63c613dd2913cf3f95c53cae2108d1c35880248ebc32",
+    "retrieved_at": "2026-10-22T12:54:00+00:00"
+  },
+  {
+    "path": "insideairbnb/sevilla/neighbourhoods.geojson",
+    "url": "https://data.insideairbnb.com/spain/andaluc%C3%ADa/sevilla/2026-09-25/visualisations/neighbourhoods.geojson",
+    "bytes": 178966,
+    "sha256": "75f0bba23d550b8e270e9b358bb0db434bdae268e304c10fe041edcda8a45606",
+    "retrieved_at": "2026-10-22T12:54:00+00:00"
+  },
+  {
+    "path": "insideairbnb/valencia/2025-12-27/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/vc/valencia/2025-12-27/visualisations/listings.csv",
+    "bytes": 2004840,
+    "sha256": "4b91234e9fa1406c9eb96e5057876890aedde113e0bd06f9391e1711f9f88c2b",
+    "retrieved_at": "2026-10-22T12:53:57+00:00"
+  },
+  {
+    "path": "insideairbnb/valencia/2026-09-20/listings.csv",
+    "url": "https://data.insideairbnb.com/spain/vc/valencia/2026-09-20/visualisations/listings.csv",
+    "bytes": 2266299,
+    "sha256": "a5f0c1b5b0f8c57555f85cc41b3f02a27544900ae7bc1e458ab895dea649201e",
+    "retrieved_at": "2026-10-22T12:53:58+00:00"
+  },
+  {
+    "path": "insideairbnb/valencia/neighbourhoods.geojson",
+    "url": "https://data.insideairbnb.com/spain/vc/valencia/2026-09-20/visualisations/neighbourhoods.geojson",
+    "bytes": 177844,
+    "sha256": "fd8b538aa5ce06e55fa78c6455fea6db66821c8f2a1664247de8f3ae4c77b263",
+    "retrieved_at": "2026-10-22T12:53:58+00:00"
+  },
+  {
+    "path": "rents/incasol_rents.json",
+    "url": "https://analisi.transparenciacatalunya.cat/resource/qww9-bvhh.json?$where=nom_territori%20in%28%27Barcelona%27%2C%27Girona%27%29&$limit=50000",
+    "bytes": 24412,
+    "sha256": "4faa1d8f945f28931aea9ec51e224536ec37ef0c770890fd41def377c52a1bf5",
+    "retrieved_at": "2026-10-22T12:54:07+00:00"
+  }
+]

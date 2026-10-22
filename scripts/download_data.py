@@ -5,8 +5,11 @@ Skips files that already exist, so it is safe to re-run.
 Run with:  python scripts/download_data.py
 """
 
+import hashlib
+import json
 import sys
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -54,6 +57,30 @@ def all_downloads() -> list[tuple[str, Path]]:
     return jobs
 
 
+def write_manifest(jobs: list[tuple[str, Path]]) -> None:
+    """Record url, size, sha256 and retrieval time of every raw file.
+
+    `retrieved_at` is the file's modification time, which is the download
+    time for files fetched by this script.
+    """
+    entries = []
+    for url, target in jobs:
+        if not target.exists():
+            continue
+        stat = target.stat()
+        entries.append(
+            {
+                "path": str(target.relative_to(src.RAW_DIR)),
+                "url": url,
+                "bytes": stat.st_size,
+                "sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+                "retrieved_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(timespec="seconds"),
+            }
+        )
+    src.MANIFEST_PATH.write_text(json.dumps(sorted(entries, key=lambda e: e["path"]), indent=2) + "\n")
+    print(f"wrote {src.MANIFEST_PATH.relative_to(src.RAW_DIR.parent.parent)} ({len(entries)} files)")
+
+
 def main() -> None:
     failures = []
     for url, target in all_downloads():
@@ -62,6 +89,7 @@ def main() -> None:
         except OSError as error:  # URLError and HTTPError are OSErrors
             failures.append(target)
             print(f"FAIL  {target.relative_to(src.RAW_DIR)}: {error}")
+    write_manifest(all_downloads())
     if failures:
         sys.exit(f"{len(failures)} download(s) failed - re-run to retry.")
 
