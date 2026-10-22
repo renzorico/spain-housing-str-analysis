@@ -121,3 +121,15 @@ def test_tourist_flat_codes_in_other_regions():
     }
     for code, expected in codes.items():
         assert cleaning.regional_licence(section + code) == expected
+
+
+def test_hut_number_matches_register_format():
+    assert cleaning.hut_number(REGIONAL + "HUTB-012345") == "12345"
+    assert cleaning.hut_number("HUTB- 012345") == "12345"   # register spacing
+    assert cleaning.hut_number(REGIONAL + "Exempt - seasonal rental") is None
+
+
+def test_listing_hut_number_ignores_national_section():
+    glued = NATIONAL + "ESFCTU0000080190000123450000000000HUTB-0123456789"
+    assert cleaning.listing_hut_number(glued) is None
+    assert cleaning.listing_hut_number(REGIONAL + "HUTB-012345" + GAP + glued) == "12345"

@@ -11,6 +11,7 @@ import zipfile
 
 import pandas as pd
 
+from . import cleaning
 from . import sources as src
 
 # Incasòl publishes quarters, half-years, nine-month and full-year
@@ -41,6 +42,20 @@ def hut_counts_by_neighbourhood(quarter: str) -> pd.Series:
         "N_EXPEDIENT"
     ].nunique()
     return counts.rename("registered_huts")
+
+
+def registered_hut_numbers(quarter: str) -> set[str]:
+    """Normalised HUT numbers in the official register (see
+    cleaning.hut_number), for matching against Airbnb listings."""
+    path = src.hut_register_path(quarter)
+    with zipfile.ZipFile(path) as archive, archive.open(
+        archive.infolist()[0]
+    ) as handle:
+        numbers = pd.read_csv(
+            handle, usecols=["NUMERO_REGISTRE_GENERALITAT"], dtype=str
+        )
+    # dropna, not a truthiness check: map turns None into NaN, which is truthy
+    return set(numbers["NUMERO_REGISTRE_GENERALITAT"].map(cleaning.hut_number).dropna())
 
 
 def hut_totals() -> pd.Series:

@@ -93,6 +93,27 @@ def regional_licence(value: object) -> str:
     return "other"
 
 
+HUT_NUMBER = re.compile(r"hut[bglt]-?\s*(\d+)", re.IGNORECASE)
+
+
+def hut_number(value: object) -> str | None:
+    """The Catalan HUT registration number in a licence entry, normalised
+    to digits without leading zeros so Airbnb and the official register
+    can be matched. A public register ID, not personal data; only counts
+    of matches are ever reported."""
+    if pd.isna(value):
+        return None
+    match = HUT_NUMBER.search(str(value))
+    return match.group(1).lstrip("0") or "0" if match else None
+
+
+def listing_hut_number(value: object) -> str | None:
+    """HUT number from a listing's REGIONAL section only. In the national
+    section the HUT number is glued to the NRUA code with no separator, so
+    neighbouring digits get absorbed and the number no longer matches."""
+    return hut_number(_section(value, REGIONAL_SECTION))
+
+
 def national_licence(value: object) -> str:
     """Category of the national registry (NRUA) section."""
     text = _section(value, NATIONAL_SECTION)
