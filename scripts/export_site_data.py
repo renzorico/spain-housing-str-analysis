@@ -133,7 +133,7 @@ def meta() -> dict:
             "A listing that is absent from a later scrape may have been withdrawn, re-listed under a new id, or missed by the scrape.",
             "Tourist-licence shares outside Catalonia are a lower bound: only confirmed regional codes are counted.",
             "A missing or unmatched licence number is not proof of an illegal listing.",
-            "Airbnb's licence form changed: the 'Exempt - seasonal rental' option first appears in Jun 2026, so licence categories are not comparable across that date.",
+            "Airbnb's licence form changed: the 'Exempt - seasonal rental' option appears in Barcelona between Mar and Jun 2026 and is used in Madrid and Valencia by Sep 2026, but almost never in Málaga or Sevilla, so licence categories are not comparable across those dates.",
             "Comparisons show timing and differences, not causes.",
         ],
     }
@@ -435,20 +435,13 @@ def register(snapshots: dict, reconciliation: dict) -> dict:
             .map(cleaning.listing_hut_number)
             .dropna()
         )
-        displayed = set(shown)
-        matched = displayed & numbers
         match.append(
             {
                 "snapshot": snapshot,
                 "register_quarter": quarter,
                 "register_records": official.register_record_count(quarter),
                 "register_numbers": len(numbers),
-                "listings_showing_number": int(len(shown)),
-                "displayed_numbers": len(displayed),
-                "displayed_numbers_found_in_register": len(matched),
-                "displayed_found_pct": round(len(matched) / len(displayed) * 100, 1),
-                "register_numbers_displayed_pct": round(len(matched) / len(numbers) * 100, 1),
-                "numbers_on_2plus_listings": int((shown.value_counts() > 1).sum()),
+                **official.summarise_match(shown, numbers),
             }
         )
     return {

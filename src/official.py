@@ -93,6 +93,28 @@ def registered_hut_numbers(quarter: str) -> set[str]:
     return set(numbers["NUMERO_REGISTRE_GENERALITAT"].map(cleaning.hut_number).dropna())
 
 
+def summarise_match(shown: pd.Series, register_numbers: set[str]) -> dict:
+    """How the HUT numbers shown on listings relate to a register quarter.
+
+    `shown` has one normalised HUT number per listing that shows one (see
+    cleaning.listing_hut_number). Three units stay apart: listings, distinct
+    displayed numbers and register numbers. A match shows that a number
+    exists in the register; it does not verify that the listing is that
+    property, and it cannot show how many licensed flats are absent from the
+    platform.
+    """
+    displayed = set(shown)
+    matched = displayed & register_numbers
+    return {
+        "listings_showing_number": int(len(shown)),
+        "displayed_numbers": len(displayed),
+        "displayed_numbers_found_in_register": len(matched),
+        "displayed_found_pct": round(len(matched) / len(displayed) * 100, 1),
+        "register_numbers_displayed_pct": round(len(matched) / len(register_numbers) * 100, 1),
+        "numbers_on_2plus_listings": int((shown.value_counts() > 1).sum()),
+    }
+
+
 def hut_totals() -> pd.Series:
     """Registered tourist flats in Barcelona, per published quarter."""
     totals = {
