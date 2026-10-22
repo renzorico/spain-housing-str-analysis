@@ -31,10 +31,10 @@ def test_transitions_track_moves_inactivity_and_exits():
     december = listings([1, 2, 3, 4], [2, 2, 2, 32], [100, 100, 100, 100])
     september = listings([1, 2, 4, 9], [32, 2, 32, 2], [100, 0, 100, 100])
     table = metrics.transitions(december, september)
-    assert table.loc["tourist", "seasonal"] == 1  # id 1 moved
-    assert table.loc["tourist", "inactive"] == 1  # id 2 no open dates
-    assert table.loc["tourist", "gone"] == 1  # id 3 left the file
-    assert table.loc["seasonal", "seasonal"] == 1  # id 4 stayed
+    assert table.loc["under_31", "over_31"] == 1  # id 1 moved
+    assert table.loc["under_31", "inactive"] == 1  # id 2 no open dates
+    assert table.loc["under_31", "gone"] == 1  # id 3 left the file
+    assert table.loc["over_31", "over_31"] == 1  # id 4 stayed
     assert table.to_numpy().sum() == 4  # new id 9 not counted
 
 
@@ -54,11 +54,11 @@ def test_place_names_match_across_sources():
 
 
 def test_exit_gap_in_points():
-    # 1 of 2 month-plus listings gone (50%), 0 of 2 tourist gone (0%)
+    # 1 of 2 month-plus listings gone (50%), 0 of 2 shorter-stay gone (0%)
     table = pd.DataFrame(
-        {"tourist": [2, 0, 0], "boundary": [0, 1, 0], "seasonal": [0, 0, 0],
+        {"under_31": [2, 0, 0], "exactly_31": [0, 1, 0], "over_31": [0, 0, 0],
          "inactive": [0, 0, 0], "gone": [0, 0, 1]},
-        index=["tourist", "boundary", "seasonal"],
+        index=["under_31", "exactly_31", "over_31"],
     )
     gap, se = metrics.exit_gap(table)
     assert gap == 50.0

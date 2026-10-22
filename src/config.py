@@ -26,14 +26,16 @@ FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 # homes; the 99th percentile is ~2,000 EUR.
 MAX_PRICE = 1000
 
-# In Catalonia a tourist flat (HUT) is let for an "estada de temporada":
-# "a continuous period of 31 days or fewer" (Decret 75/2020, art. 221-1,
-# as quoted in STC 64/2025, BOE-A-2025-7430). Longer stays are seasonal
-# (temporada) lets, a different legal market. An HUT must be let whole
-# (Llei 13/2002, art. 50 bis), so private rooms cannot hold one.
+# The Catalan tourist-stay limit: a tourist flat (HUT) is let for an "estada
+# de temporada", "a continuous period of 31 days or fewer" (Decret 75/2020,
+# art. 221-1, as quoted in STC 64/2025, BOE-A-2025-7430). An HUT must be let
+# whole (Llei 13/2002, art. 50 bis), so private rooms cannot hold one.
 # Whether a 31-NIGHT booking counts as "31 days or fewer" is ambiguous, so
-# listings with exactly this minimum get their own "boundary" stay band.
-MAX_TOURIST_NIGHTS = 31
+# listings are only ever labelled by what they ask: under 31, exactly 31 or
+# over 31 nights minimum. A minimum stay is a setting, not a contract, an
+# actual stay or a legal finding. Outside Catalonia this number has no legal
+# meaning, and 31+ is used there only as a common measurement threshold.
+STAY_LINE_NIGHTS = 31
 
 # A host with this many listings or more is treated as professional.
 PROFESSIONAL_MIN = 5

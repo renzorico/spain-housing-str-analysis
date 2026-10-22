@@ -96,8 +96,8 @@ def test_exit_gap_cohorts_match_the_transition_tables():
     for row in load("cities.json"):
         gap, table = row["exit_gap"], transitions[row["city"]]
         sums = {band: sum(counts) for band, counts in zip(table["from"], table["counts"])}
-        assert gap["month_plus_listings"] == sums["boundary"] + sums["seasonal"], row["city"]
-        assert gap["shorter_listings"] == sums["tourist"], row["city"]
+        assert gap["month_plus_listings"] == sums["exactly_31"] + sums["over_31"], row["city"]
+        assert gap["shorter_listings"] == sums["under_31"], row["city"]
         assert gap["ci_low"] <= gap["points"] <= gap["ci_high"], row["city"]
         # the account-level interval must not be narrower than the naive one
         assert gap["ci_high"] - gap["ci_low"] >= gap["listing_level_ci_high"] - gap["listing_level_ci_low"]

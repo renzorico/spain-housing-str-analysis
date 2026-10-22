@@ -109,7 +109,7 @@ def meta() -> dict:
         "observation_window": cfg.OBSERVATION_WINDOW,
         "post_observation_developments": cfg.POST_OBSERVATION_DEVELOPMENTS,
         "context_events": cfg.CONTEXT_EVENTS,
-        "max_tourist_nights": cfg.MAX_TOURIST_NIGHTS,
+        "stay_line_nights": cfg.STAY_LINE_NIGHTS,
         "sources": [
             {
                 "title": "Inside Airbnb",
@@ -347,7 +347,7 @@ def neighbourhoods(snapshots: dict) -> tuple[list, dict, dict]:
             "active_listings": act.groupby(key)["id"].count(),
             "with_tourist_licence": act.groupby(key)["has_tourist_licence"].sum(),
             "share_month_plus": act.groupby(key)["minimum_nights"].apply(
-                lambda n: metrics.share(n >= cfg.MAX_TOURIST_NIGHTS)
+                lambda n: metrics.share(n >= cfg.STAY_LINE_NIGHTS)
             ),
             "share_professional": act.groupby(key)["is_professional"].apply(
                 metrics.share

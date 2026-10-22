@@ -128,15 +128,15 @@ def national_licence(value: object) -> str:
 
 
 def stay_band(minimum_nights: pd.Series) -> pd.Series:
-    """Place each listing on the tourist / seasonal line.
-
-    "boundary" = exactly MAX_TOURIST_NIGHTS, where the legal reading is
-    ambiguous (see config). Missing minimum stays stay missing.
+    """Label each listing by the minimum stay it asks, against the 31-night
+    line: under_31, exactly_31 or over_31. These are observed settings, not
+    legal classes (exactly 31 is where the legal reading is ambiguous; see
+    config). Missing minimum stays stay missing.
     """
     band = pd.Series(pd.NA, index=minimum_nights.index, dtype="string")
-    band[minimum_nights < cfg.MAX_TOURIST_NIGHTS] = "tourist"
-    band[minimum_nights == cfg.MAX_TOURIST_NIGHTS] = "boundary"
-    band[minimum_nights > cfg.MAX_TOURIST_NIGHTS] = "seasonal"
+    band[minimum_nights < cfg.STAY_LINE_NIGHTS] = "under_31"
+    band[minimum_nights == cfg.STAY_LINE_NIGHTS] = "exactly_31"
+    band[minimum_nights > cfg.STAY_LINE_NIGHTS] = "over_31"
     return band
 
 

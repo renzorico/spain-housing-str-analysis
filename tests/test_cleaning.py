@@ -96,7 +96,7 @@ def test_national_licence_reads_declared_use():
 
 def test_stay_band_splits_at_31_nights():
     bands = cleaning.stay_band(pd.Series([30, 31, 32, np.nan]))
-    assert bands.tolist()[:3] == ["tourist", "boundary", "seasonal"]
+    assert bands.tolist()[:3] == ["under_31", "exactly_31", "over_31"]
     assert pd.isna(bands.iloc[3])
 
 

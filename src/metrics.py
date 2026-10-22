@@ -9,7 +9,7 @@ import pandas as pd
 
 from . import config as cfg
 
-BANDS = ["tourist", "boundary", "seasonal"]
+BANDS = ["under_31", "exactly_31", "over_31"]  # minimum stay asked, vs the 31-night line
 # Status of a listing in a later snapshot, used for transitions.
 GONE = "gone"
 INACTIVE = "inactive"
@@ -44,8 +44,8 @@ def snapshot_summary(df: pd.DataFrame) -> dict:
     act = active(df)
     priced = act[act["price"].between(1, cfg.MAX_PRICE)]
     masks = {
-        "share_31_nights": act["minimum_nights"] == cfg.MAX_TOURIST_NIGHTS,
-        "share_month_plus": act["minimum_nights"] >= cfg.MAX_TOURIST_NIGHTS,
+        "share_31_nights": act["minimum_nights"] == cfg.STAY_LINE_NIGHTS,
+        "share_month_plus": act["minimum_nights"] >= cfg.STAY_LINE_NIGHTS,
         "share_tourist_licence": act["has_tourist_licence"],
         "share_nrua_seasonal": act["national_licence"] == "nrua_seasonal",
         "share_professional": act["is_professional"],
@@ -58,8 +58,8 @@ def snapshot_summary(df: pd.DataFrame) -> dict:
         # [numerator, denominator] behind every share, so each published
         # percentage can be checked against its population.
         "counts": {name: [int(mask.sum()), int(len(mask))] for name, mask in masks.items()},
-        "share_31_nights": share(act["minimum_nights"] == cfg.MAX_TOURIST_NIGHTS),
-        "share_month_plus": share(act["minimum_nights"] >= cfg.MAX_TOURIST_NIGHTS),
+        "share_31_nights": share(act["minimum_nights"] == cfg.STAY_LINE_NIGHTS),
+        "share_month_plus": share(act["minimum_nights"] >= cfg.STAY_LINE_NIGHTS),
         "share_tourist_licence": share(act["has_tourist_licence"]),
         "share_nrua_seasonal": share(act["national_licence"] == "nrua_seasonal"),
         "share_professional": share(act["is_professional"]),
@@ -125,10 +125,10 @@ def exit_gap(table: pd.DataFrame) -> tuple[float, float]:
     """From a transitions table: (exit rate of month-plus listings) minus
     (exit rate of tourist listings), in percentage points, with its
     standard error. Month-plus = boundary + seasonal (31+ nights)."""
-    month_plus = table.loc[["boundary", "seasonal"]].sum()
-    tourist = table.loc["tourist"]
+    month_plus = table.loc[["exactly_31", "over_31"]].sum()
+    shorter = table.loc["under_31"]
     p1, n1 = month_plus[GONE] / month_plus.sum(), month_plus.sum()
-    p2, n2 = tourist[GONE] / tourist.sum(), tourist.sum()
+    p2, n2 = shorter[GONE] / shorter.sum(), shorter.sum()
     se = np.sqrt(p1 * (1 - p1) / n1 + p2 * (1 - p2) / n2)
     return float((p1 - p2) * 100), float(se * 100)
 
@@ -155,7 +155,7 @@ def availability_sensitivity(df: pd.DataFrame) -> dict:
             "listings": int(len(selected)),
             "unknown_minimum_stay": int(selected["minimum_nights"].isna().sum()),
             "known_minimum_stay": int(len(known)),
-            "month_plus_pct": share(known["minimum_nights"] >= cfg.MAX_TOURIST_NIGHTS),
+            "month_plus_pct": share(known["minimum_nights"] >= cfg.STAY_LINE_NIGHTS),
         }
     return result
 
@@ -173,7 +173,7 @@ def exit_gap_cohort(earlier: pd.DataFrame, later: pd.DataFrame) -> pd.DataFrame:
     glue unrelated listings together.
     """
     cohort = active(earlier).copy()
-    cohort["month_plus"] = cohort["minimum_nights"] >= cfg.MAX_TOURIST_NIGHTS
+    cohort["month_plus"] = cohort["minimum_nights"] >= cfg.STAY_LINE_NIGHTS
     cohort["gone"] = ~cohort["id"].isin(later["id"])
     unknown = cohort["host_id"].isna()
     cohort.loc[unknown, "host_id"] = -1 - np.arange(int(unknown.sum()))
