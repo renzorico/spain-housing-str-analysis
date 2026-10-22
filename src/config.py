@@ -26,6 +26,8 @@ MAX_PRICE = 1000
 # In Catalonia a stay of 31 days or fewer is tourist use and needs an HUT
 # licence (Decret 75/2020, art. 241-1). Longer stays are seasonal
 # (temporada) lets, a different legal market.
+# Whether a 31-NIGHT booking counts as "31 days or fewer" is ambiguous, so
+# listings with exactly this minimum get their own "boundary" stay band.
 MAX_TOURIST_NIGHTS = 31
 
 # A host with this many listings or more is treated as professional.

@@ -78,11 +78,24 @@ def national_licence(value: object) -> str:
     return "other"
 
 
+def stay_band(minimum_nights: pd.Series) -> pd.Series:
+    """Place each listing on the tourist / seasonal line.
+
+    "boundary" = exactly MAX_TOURIST_NIGHTS, where the legal reading is
+    ambiguous (see config). Missing minimum stays stay missing.
+    """
+    band = pd.Series(pd.NA, index=minimum_nights.index, dtype="string")
+    band[minimum_nights < cfg.MAX_TOURIST_NIGHTS] = "tourist"
+    band[minimum_nights == cfg.MAX_TOURIST_NIGHTS] = "boundary"
+    band[minimum_nights > cfg.MAX_TOURIST_NIGHTS] = "seasonal"
+    return band
+
+
 def add_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Add the handful of derived columns the notebooks use."""
     out = df.copy()
     out["is_entire_home"] = out["room_type"] == "Entire home/apt"
-    out["is_tourist_stay"] = out["minimum_nights"] <= cfg.MAX_TOURIST_NIGHTS
+    out["stay_band"] = stay_band(out["minimum_nights"])
     out["is_central"] = out["neighbourhood_group"].isin(cfg.CENTRAL_DISTRICTS)
     out["is_professional"] = (
         out["calculated_host_listings_count"] >= cfg.PROFESSIONAL_MIN
@@ -97,7 +110,7 @@ def clean_listings(df: pd.DataFrame) -> pd.DataFrame:
     """Filter to the priced, active market, printing each step.
 
     Unlike Berlin, seasonal (> 31 nights) listings are KEPT: the seasonal
-    rent cap is one of the levers under study. Split on is_tourist_stay.
+    rent cap is one of the levers under study. Split on stay_band.
     """
     df = add_columns(df)
     print(f"start:                              {len(df):>6,} listings")
