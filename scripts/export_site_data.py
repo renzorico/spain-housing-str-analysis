@@ -1,0 +1,391 @@
+"""Export the aggregated data the website reads, into site/public/data/.
+
+Every number comes from the same functions the notebooks use (src/metrics.py,
+src/official.py), so the site and the analysis cannot disagree.
+
+PRIVACY: nothing exported identifies a host or a flat. No listing ids, host
+ids, names, licence text or addresses. Map points carry only Inside Airbnb's
+already-offset coordinates plus a few categories. tests/test_export.py scans
+the output for forbidden fields.
+
+Run with:  python scripts/export_site_data.py
+"""
+
+import json
+import sys
+from datetime import date
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from src import cleaning, metrics, official
+from src import config as cfg
+from src import sources as src
+
+OUT_DIR = cfg.PROJECT_ROOT / "site" / "public" / "data"
+COORD_DECIMALS = 4  # ~11 m; Inside Airbnb already offsets points up to 150 m
+GEOJSON_DECIMALS = 5  # ~1 m; enough for neighbourhood outlines
+MIN_NIGHTS_CAP = 120  # longer minimum stays are grouped into one "120+" bar
+CURVE_POINTS = 100
+HOST_SIZE_BUCKETS = [(1, 1, "1"), (2, 4, "2-4"), (5, 19, "5-19"), (20, np.inf, "20+")]
+# A few listings have no host-listing count (0.8% in Jun 2026).
+HOST_SIZE_LABELS = [label for _, _, label in HOST_SIZE_BUCKETS] + ["unknown"]
+
+# Small integer codes keep the per-listing map files light on phones.
+BAND_CODES = {band: i for i, band in enumerate(metrics.BANDS)}
+LICENCE_CODES = {
+    name: i
+    for i, name in enumerate(
+        [
+            "tourist_flat",
+            "hotel_or_hostel",
+            "other_code",
+            "exempt_seasonal",
+            "exempt_other",
+            "missing",
+            "other",
+        ]
+    )
+}
+ROOM_CODES = {
+    name: i
+    for i, name in enumerate(
+        ["Entire home/apt", "Private room", "Shared room", "Hotel room"]
+    )
+}
+
+
+def write_json(name: str, payload: object) -> None:
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    path = OUT_DIR / name
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+    )
+    print(
+        f"wrote {path.relative_to(cfg.PROJECT_ROOT)}  ({path.stat().st_size / 1e3:.0f} kB)"
+    )
+
+
+def clean_number(value: object) -> object:
+    """JSON has no NaN: turn missing numbers into null."""
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return None
+    return value.item() if hasattr(value, "item") else value
+
+
+def json_safe(obj: object) -> object:
+    """Recursively replace NaN (and numpy scalars) so the payload is valid JSON."""
+    if isinstance(obj, dict):
+        return {key: json_safe(value) for key, value in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [json_safe(value) for value in obj]
+    return clean_number(obj)
+
+
+def round_label(city: str, snapshot: str) -> str:
+    """'Dec 2025' / 'Sep 2026' etc. Snapshot days differ between cities."""
+    return pd.Timestamp(snapshot).strftime("%b %Y")
+
+
+def host_size(count: pd.Series) -> pd.Series:
+    labels = pd.Series("unknown", index=count.index)
+    for low, high, label in HOST_SIZE_BUCKETS:
+        labels[(count >= low) & (count <= high)] = label
+    return labels
+
+
+# ---- datasets ----------------------------------------------------------
+
+
+def meta() -> dict:
+    return {
+        "generated": date.today().isoformat(),
+        "snapshots": src.SNAPSHOTS,
+        "policy_levers": cfg.POLICY_LEVERS,
+        "context_events": cfg.CONTEXT_EVENTS,
+        "max_tourist_nights": cfg.MAX_TOURIST_NIGHTS,
+        "sources": [
+            {
+                "title": "Inside Airbnb",
+                "url": "https://insideairbnb.com/get-the-data/",
+                "licence": "CC BY 4.0",
+            },
+            {
+                "title": "Ajuntament de Barcelona - Habitatges d'ús turístic",
+                "url": src.HUT_REGISTER_DATASET,
+                "licence": "CC BY 4.0",
+            },
+            {
+                "title": "Generalitat de Catalunya - Preu mitjà del lloguer (Incasòl)",
+                "url": src.RENTS_DATASET,
+                "licence": "CC BY 4.0",
+            },
+        ],
+        "caveats": [
+            "Prices are asking prices, not what guests paid; every Dec 2025 snapshot has no prices.",
+            "Only active listings (at least one open date) are counted; listings with no open dates jump to ~22-24% in every city's Sep 2026 snapshot.",
+            "Tourist-licence shares outside Catalonia are a lower bound: only confirmed regional codes are counted.",
+            "A missing or unmatched licence number is not proof of an illegal listing.",
+            "Comparisons show timing and differences, not causes.",
+        ],
+    }
+
+
+def map_points(df: pd.DataFrame) -> dict:
+    """Columnar arrays for one snapshot's active listings."""
+    act = metrics.active(df)
+    price = act["price"].where(act["price"].between(1, cfg.MAX_PRICE))
+    return {
+        "legend": {
+            "band": metrics.BANDS,
+            "licence": list(LICENCE_CODES),
+            "room": list(ROOM_CODES),
+            "host_size": HOST_SIZE_LABELS,
+        },
+        "lat": act["latitude"].round(COORD_DECIMALS).tolist(),
+        "lon": act["longitude"].round(COORD_DECIMALS).tolist(),
+        "band": act["stay_band"].map(BAND_CODES).astype(int).tolist(),
+        "licence": act["regional_licence"].map(LICENCE_CODES).astype(int).tolist(),
+        "room": act["room_type"].map(ROOM_CODES).astype(int).tolist(),
+        "host_size": host_size(act["calculated_host_listings_count"])
+        .map({label: i for i, label in enumerate(HOST_SIZE_LABELS)})
+        .astype(int)
+        .tolist(),
+        "nights": act["minimum_nights"].astype(int).tolist(),
+        "price": [clean_number(p) for p in price.round(0)],
+    }
+
+
+def minimum_nights(snapshots: dict) -> list:
+    """Active listings per minimum stay, with median asking price per bar."""
+    rows = []
+    for (city, snapshot), df in snapshots.items():
+        act = metrics.active(df)
+        nights = act["minimum_nights"].clip(upper=MIN_NIGHTS_CAP).astype(int)
+        price = act["price"].where(act["price"].between(1, cfg.MAX_PRICE))
+        grouped = pd.DataFrame({"nights": nights, "price": price}).groupby("nights")
+        for value, group in grouped:
+            rows.append(
+                {
+                    "city": city,
+                    "snapshot": snapshot,
+                    "round": round_label(city, snapshot),
+                    "nights": int(value),
+                    "listings": int(len(group)),
+                    "median_price": clean_number(group["price"].median()),
+                }
+            )
+    return rows
+
+
+def barcelona_trends(snapshots: dict) -> list:
+    rows = []
+    for snapshot in src.SNAPSHOTS["barcelona"]:
+        act = metrics.active(snapshots[("barcelona", snapshot)])
+        priced = act[act["price"].between(1, cfg.MAX_PRICE)]
+        rows.append(
+            {
+                "snapshot": snapshot,
+                "bands": metrics.band_counts(snapshots[("barcelona", snapshot)]),
+                "regional_licence": act["regional_licence"].value_counts().to_dict(),
+                "national_licence": act["national_licence"].value_counts().to_dict(),
+                "median_price_by_band": {
+                    band: clean_number(
+                        priced.loc[priced["stay_band"] == band, "price"].median()
+                    )
+                    for band in metrics.BANDS
+                },
+            }
+        )
+    return rows
+
+
+def transitions(snapshots: dict) -> dict:
+    """Dec -> Sep flows per city, plus consecutive quarters for Barcelona."""
+
+    def table_payload(earlier, later):
+        table = metrics.transitions(earlier, later)
+        return {
+            "from": table.index.tolist(),
+            "to": table.columns.tolist(),
+            "counts": table.to_numpy().tolist(),
+        }
+
+    out = {"cities": {}, "barcelona_quarters": []}
+    for city, dates in src.SNAPSHOTS.items():
+        out["cities"][city] = {
+            "from_snapshot": dates[0],
+            "to_snapshot": dates[-1],
+            **table_payload(snapshots[(city, dates[0])], snapshots[(city, dates[-1])]),
+        }
+    bcn = src.SNAPSHOTS["barcelona"]
+    for earlier, later in zip(bcn, bcn[1:]):
+        out["barcelona_quarters"].append(
+            {
+                "from_snapshot": earlier,
+                "to_snapshot": later,
+                **table_payload(
+                    snapshots[("barcelona", earlier)], snapshots[("barcelona", later)]
+                ),
+            }
+        )
+    return out
+
+
+def cities(snapshots: dict) -> list:
+    rows = []
+    for city, dates in src.SNAPSHOTS.items():
+        table = metrics.transitions(
+            snapshots[(city, dates[0])], snapshots[(city, dates[-1])]
+        )
+        gap, se = metrics.exit_gap(table)
+        rows.append(
+            {
+                "city": city,
+                "rounds": {
+                    round_label(city, d): metrics.snapshot_summary(snapshots[(city, d)])
+                    for d in dates
+                },
+                "exit_gap": {
+                    "points": round(gap, 1),
+                    "ci_low": round(gap - 1.96 * se, 1),
+                    "ci_high": round(gap + 1.96 * se, 1),
+                },
+                "top_host_share": {
+                    f"top_{p}pct": metrics.top_host_share(
+                        snapshots[(city, dates[-1])], p
+                    )
+                    for p in (1, 5, 10)
+                },
+            }
+        )
+    # snapshot_summary holds NaN prices for Dec 2025
+    return json_safe(rows)
+
+
+def concentration(snapshots: dict) -> dict:
+    return {
+        city: metrics.concentration_curve(
+            snapshots[(city, dates[-1])], points=CURVE_POINTS
+        ).to_dict(orient="list")
+        for city, dates in src.SNAPSHOTS.items()
+    }
+
+
+def neighbourhoods(snapshots: dict) -> tuple[list, dict]:
+    """Per-neighbourhood table and the matching outlines (Barcelona, latest)."""
+    latest_quarter = list(src.HUT_REGISTER_URLS)[-1]
+    act = metrics.active(snapshots[("barcelona", src.SNAPSHOTS["barcelona"][-1])])
+    key = act["neighbourhood"].map(official.normalise_place_name)
+    priced = act["price"].where(act["price"].between(1, cfg.MAX_PRICE))
+    table = pd.DataFrame(
+        {
+            "active_listings": act.groupby(key)["id"].count(),
+            "with_tourist_licence": act.groupby(key)["has_tourist_licence"].sum(),
+            "share_month_plus": act.groupby(key)["minimum_nights"].apply(
+                lambda n: metrics.share(n >= cfg.MAX_TOURIST_NIGHTS)
+            ),
+            "share_professional": act.groupby(key)["is_professional"].apply(
+                metrics.share
+            ),
+            "median_price": priced.groupby(key).median().round(0),
+        }
+    ).join(official.hut_counts_by_neighbourhood(latest_quarter), how="outer")
+
+    geo = json.loads(src.neighbourhoods_path("barcelona").read_text())
+    rows = []
+    for feature in geo["features"]:
+        props = feature["properties"]
+        name_key = official.normalise_place_name(props["neighbourhood"])
+        values = (
+            table.loc[name_key] if name_key in table.index else pd.Series(dtype=float)
+        )
+        row = {
+            "neighbourhood": props["neighbourhood"],
+            "district": props["neighbourhood_group"],
+        }
+        for column in table.columns:
+            row[column] = clean_number(values.get(column, np.nan))
+        for column in ["active_listings", "with_tourist_licence", "registered_huts"]:
+            row[column] = int(row[column] or 0)
+        rows.append(row)
+        feature["geometry"]["coordinates"] = round_coordinates(
+            feature["geometry"]["coordinates"]
+        )
+    return rows, geo
+
+
+def round_coordinates(coords):
+    if isinstance(coords, (int, float)):
+        return round(coords, GEOJSON_DECIMALS)
+    return [round_coordinates(c) for c in coords]
+
+
+def register(snapshots: dict) -> dict:
+    latest_quarter = list(src.HUT_REGISTER_URLS)[-1]
+    numbers = official.registered_hut_numbers(latest_quarter)
+    match = []
+    for snapshot in src.SNAPSHOTS["barcelona"]:
+        shown = (
+            metrics.active(snapshots[("barcelona", snapshot)])["license"]
+            .map(cleaning.listing_hut_number)
+            .dropna()
+        )
+        distinct = set(shown)
+        matched = distinct & numbers
+        match.append(
+            {
+                "snapshot": snapshot,
+                "listings_showing_number": int(len(shown)),
+                "distinct_numbers": len(distinct),
+                "match_register_pct": round(len(matched) / len(distinct) * 100, 1),
+                "register_visible_pct": round(len(matched) / len(numbers) * 100, 1),
+                "numbers_on_2plus_listings": int((shown.value_counts() > 1).sum()),
+            }
+        )
+    return {
+        "register_quarter": latest_quarter,
+        "totals": official.hut_totals().to_dict(),
+        "match": match,
+    }
+
+
+def rents() -> list:
+    series = official.load_rents()
+    series["yoy_pct"] = (series["avg_rent"].pct_change(4) * 100).round(1)
+    series["quarter_start"] = series["quarter_start"].dt.strftime("%Y-%m-%d")
+    return [
+        {k: clean_number(v) for k, v in row.items()}
+        for row in series.to_dict(orient="records")
+    ]
+
+
+def main() -> None:
+    snapshots = {
+        (city, snapshot): cleaning.add_columns(cleaning.load_snapshot(city, snapshot))
+        for city, dates in src.SNAPSHOTS.items()
+        for snapshot in dates
+    }
+    write_json("meta.json", meta())
+    for snapshot in src.SNAPSHOTS["barcelona"]:
+        write_json(
+            f"barcelona_points_{snapshot}.json",
+            map_points(snapshots[("barcelona", snapshot)]),
+        )
+    write_json("minimum_nights.json", minimum_nights(snapshots))
+    write_json("barcelona_trends.json", barcelona_trends(snapshots))
+    write_json("transitions.json", transitions(snapshots))
+    write_json("cities.json", cities(snapshots))
+    write_json("concentration.json", concentration(snapshots))
+    table, outlines = neighbourhoods(snapshots)
+    write_json("neighbourhoods.json", table)
+    write_json("neighbourhoods.geojson", outlines)
+    write_json("register.json", register(snapshots))
+    write_json("rents.json", rents())
+
+
+if __name__ == "__main__":
+    main()
