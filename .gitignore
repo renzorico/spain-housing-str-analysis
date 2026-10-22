@@ -1,0 +1,21 @@
+# data is downloaded by hand, never committed (see data/README.md)
+data/raw/*.csv
+data/raw/*.csv.gz
+data/*.csv
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# jupyter
+.ipynb_checkpoints/
+
+# os
+.DS_Store
