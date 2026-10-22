@@ -34,6 +34,7 @@ data/raw/
 | `price` is missing on **100%** of rows | Every Dec 2025 snapshot, all cities | Price trends use Mar, Jun and Sep 2026 only. Counts and licences still use Dec |
 | Listings with **zero open dates** jump to ~22–24% | Every Sep 2026 snapshot, all cities (1–6% in Dec outside Barcelona and Madrid) | Every over-time metric uses `is_active` (`availability_365 > 0`), the same rule for every snapshot. The jump is reported, not explained |
 | `minimum_nights` missing on 7–18% of rows | Sep 2026 snapshots only | All such rows have zero open dates, so `is_active` already excludes them |
+| Airbnb's licence form changed | The *Exempt – seasonal rental* option first appears in Jun 2026, in every city; empty licence fields fall sharply at the same time | Licence categories are compared within a snapshot, never as a before/after effect of a rule |
 | `calculated_host_listings_count` missing | 113 active listings in Barcelona Jun 2026 (0.8%) | Counted as not professional in shares; shown as host size "unknown" on the site |
 | No district-level rents | Generalitat publishes municipality level only | Rents appear as a Barcelona time series, not by district |
 

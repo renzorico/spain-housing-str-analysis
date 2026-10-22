@@ -129,6 +129,7 @@ def meta() -> dict:
             "Only active listings (at least one open date) are counted; listings with no open dates jump to ~22-24% in every city's Sep 2026 snapshot.",
             "Tourist-licence shares outside Catalonia are a lower bound: only confirmed regional codes are counted.",
             "A missing or unmatched licence number is not proof of an illegal listing.",
+            "Airbnb's licence form changed: the 'Exempt - seasonal rental' option first appears in Jun 2026, so licence categories are not comparable across that date.",
             "Comparisons show timing and differences, not causes.",
         ],
     }
