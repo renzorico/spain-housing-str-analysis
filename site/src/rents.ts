@@ -9,8 +9,8 @@ type View = "level" | "yoy";
 
 // Policy dates drawn on the chart, read from config via meta.json.
 const MARKED_LEVERS: Record<string, string> = {
-  rent_cap: "rent cap",
-  seasonal_rentals: "cap on seasonal lets",
+  rent_cap: "rent limit",
+  seasonal_rentals: "limit on seasonal lets",
 };
 
 interface Point {

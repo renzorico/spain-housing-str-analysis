@@ -19,18 +19,38 @@ export interface Source {
 }
 
 export interface PolicyLever {
+  title: string;
+  timeline_label: string;
+  jurisdiction: string;
+  applies_to: City[];
+  mechanism: string;
   rule: string;
+  exceptions: string[];
   law: string;
   applies_from: string;
   deadline: string | null;
-  source: string;
+  status: string;
+  status_checked_on: string;
+  sources: { label: string; url: string }[];
   notes: string;
+  data_limits: string;
+}
+
+export interface LaterDevelopment {
+  date: string;
+  title: string;
+  summary: string;
+  note: string;
+  url: string;
 }
 
 export interface Meta {
   generated: string;
   snapshots: Record<City, string[]>;
   policy_levers: Record<string, PolicyLever>;
+  levers_as_of: string;
+  observation_window: [string, string];
+  post_observation_developments: LaterDevelopment[];
   context_events: Record<string, string>;
   max_tourist_nights: number;
   sources: Source[];

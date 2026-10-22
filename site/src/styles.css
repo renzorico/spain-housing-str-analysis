@@ -446,3 +446,17 @@ h3 {
 .chart figure {
   margin: 0;
 }
+
+.card ul {
+  margin: 4px 0 0;
+  padding-left: 1.1em;
+}
+
+.card-links {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+}
+
+.card-links a {
+  color: var(--accent);
+}

@@ -105,6 +105,9 @@ def meta() -> dict:
         "generated": date.today().isoformat(),
         "snapshots": src.SNAPSHOTS,
         "policy_levers": cfg.POLICY_LEVERS,
+        "levers_as_of": cfg.LEVERS_AS_OF,
+        "observation_window": cfg.OBSERVATION_WINDOW,
+        "post_observation_developments": cfg.POST_OBSERVATION_DEVELOPMENTS,
         "context_events": cfg.CONTEXT_EVENTS,
         "max_tourist_nights": cfg.MAX_TOURIST_NIGHTS,
         "sources": [
