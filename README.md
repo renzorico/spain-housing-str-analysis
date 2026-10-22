@@ -44,8 +44,7 @@ All dates, law numbers and primary sources (BOE / DOGC) are in
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# download listings.csv (Barcelona) from https://insideairbnb.com/get-the-data/
-# and save it as data/raw/listings.csv
+python scripts/download_data.py   # ~51 MB into data/raw/ (see data/README.md)
 
 python -m pytest -q
 jupyter lab notebooks/
