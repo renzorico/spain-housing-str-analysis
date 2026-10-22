@@ -9,18 +9,34 @@ import re
 import pandas as pd
 
 from . import config as cfg
+from . import sources as src
 
 # The raw licence field holds up to two labelled sections, e.g.
 #   "Barcelona - Regional registration number<br />HUTB-012345<br /><br />
 #    Spain - National registration number<br />ESFCTU0000...HUTB-012345"
+# The structure is the same in every Spanish city; only the regional
+# codes differ.
 SECTION_END = r"(?:<br /><br />|$)"
 REGIONAL_SECTION = re.compile(r"Regional registration number<br />(.*?)" + SECTION_END)
 NATIONAL_SECTION = re.compile(r"National registration number<br />(.*?)" + SECTION_END)
 
-# Catalan regional codes: HUTB = tourist flat (habitatge d'ús turístic),
-# HB = hotel, AJ = youth hostel, ATB = tourist-apartment building.
-HUT_CODE = re.compile(r"^hut[bglt]-?\d+", re.IGNORECASE)
-HOTEL_CODE = re.compile(r"^(hb|aj|atb)-?\d+", re.IGNORECASE)
+# Regional tourist-flat licences, only prefixes confirmed in official or
+# platform sources: Catalonia HUTB-; Madrid VT (with or without hyphen);
+# Valencia VT-...-V, VUT and CV-VUT; Andalucía VFT and VUT (VFT was renamed
+# VUT by Decreto 31/2024), with "/" or "-" separators and the frequent
+# VTF typo. Andalucía's CTC- is a generic register ID for any establishment
+# type, so it is NOT counted: tourist-flat shares outside Catalonia are a
+# lower bound.
+TOURIST_FLAT_CODE = re.compile(
+    r"^(hut[bglt]-?\d|vt-?\d|(cv-)?vut-?\d|(vft|vtf|vut)[/\-][a-z]{2}[/\-])",
+    re.IGNORECASE,
+)
+# Catalan non-flat codes: HB (hotel), AJ (youth hostel), ATB (tourist-
+# apartment building).
+HOTEL_CODE = re.compile(r"^(hb|aj|atb)-?\d", re.IGNORECASE)
+# Any other code-like value (starts with letters, contains a digit):
+# a regional registration whose type is not confirmed.
+OTHER_CODE = re.compile(r"^[a-z]{1,4}[\-/]?[a-z]{0,2}[\-/]?\d", re.IGNORECASE)
 # National registry (NRUA) codes: ES + unit (FC = whole home, HF = room)
 # + declared use (TU = tourist, NT = non-tourist, i.e. seasonal).
 NRUA_CODE = re.compile(r"^es[a-z]{2}(tu|nt)\d", re.IGNORECASE)
@@ -30,10 +46,20 @@ def load_listings() -> pd.DataFrame:
     """Read the raw file (and fail with a helpful message if it is missing)."""
     if not cfg.LISTINGS_FILE.exists():
         raise FileNotFoundError(
-            "data/raw/listings.csv not found. Download the Barcelona summary "
-            "file from https://insideairbnb.com/get-the-data/ (see data/README.md)."
+            f"{cfg.LISTINGS_FILE} not found. Run: python scripts/download_data.py"
         )
     return pd.read_csv(cfg.LISTINGS_FILE)
+
+
+def load_snapshot(city: str, snapshot: str) -> pd.DataFrame:
+    """Read one Inside Airbnb snapshot, tagged with its city and date."""
+    path = src.listings_path(city, snapshot)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"{path} not found. Run: python scripts/download_data.py"
+        )
+    df = pd.read_csv(path, low_memory=False)
+    return df.assign(city=city, snapshot=pd.Timestamp(snapshot))
 
 
 def _section(value: object, pattern: re.Pattern) -> str | None:
@@ -45,7 +71,7 @@ def _section(value: object, pattern: re.Pattern) -> str | None:
 
 
 def regional_licence(value: object) -> str:
-    """Category of the Catalan (regional) licence section.
+    """Category of the regional licence section.
 
     PRIVACY: the raw field can contain personal data under EU rules. The
     two *_licence functions are the only places it is read - everywhere
@@ -54,14 +80,16 @@ def regional_licence(value: object) -> str:
     text = _section(value, REGIONAL_SECTION)
     if not text:
         return "missing"
-    if HUT_CODE.search(text):
-        return "hut"  # tourist flat licence
+    if TOURIST_FLAT_CODE.search(text):
+        return "tourist_flat"  # e.g. Barcelona's HUT licence
     if HOTEL_CODE.search(text):
         return "hotel_or_hostel"
     if text.lower().startswith("exempt - seasonal"):
         return "exempt_seasonal"  # host declares a seasonal let
     if text.lower().startswith("exempt"):
         return "exempt_other"  # hotel, hostel, camping, ...
+    if OTHER_CODE.search(text):
+        return "other_code"  # registered, type not confirmed
     return "other"
 
 
@@ -102,7 +130,11 @@ def add_columns(df: pd.DataFrame) -> pd.DataFrame:
     )
     out["regional_licence"] = out["license"].apply(regional_licence)
     out["national_licence"] = out["license"].apply(national_licence)
-    out["has_hut"] = out["regional_licence"] == "hut"
+    out["has_tourist_licence"] = out["regional_licence"] == "tourist_flat"
+    # Same rule for every snapshot and city: missing minimum stays occur
+    # only in listings with no open dates, and their share jumps in the
+    # Sep 2026 snapshots of every city (see data/README.md).
+    out["is_active"] = out["availability_365"] > 0
     return out
 
 

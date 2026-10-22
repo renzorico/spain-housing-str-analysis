@@ -6,16 +6,19 @@ so there is exactly one copy to find and change.
 
 from pathlib import Path
 
+from . import sources
+
+# The Barcelona snapshot notebooks 01-02 analyse in depth. Inside Airbnb
+# publishes a new one every quarter, so without this date the numbers
+# cannot be reproduced. All snapshots are listed in src/sources.py.
+SNAPSHOT_DATE = "2026-09-17"
+
 # ---- paths -----------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-LISTINGS_FILE = PROJECT_ROOT / "data" / "raw" / "listings.csv"
+LISTINGS_FILE = sources.listings_path("barcelona", SNAPSHOT_DATE)
 CLEAN_FILE = PROJECT_ROOT / "data" / "listings_clean.csv"
 FIGURES_DIR = PROJECT_ROOT / "reports" / "figures"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
-
-# The date Inside Airbnb scraped this file. They publish a new one every
-# quarter, so without this date the numbers cannot be reproduced.
-SNAPSHOT_DATE = "2026-09-17"
 
 # ---- cleaning thresholds ---------------------------------------------
 # Same cap as the Berlin project, kept for comparability. In Barcelona it

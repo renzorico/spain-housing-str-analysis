@@ -73,12 +73,12 @@ def test_cleaning_drops_bad_price_unknown_stay_and_dead_listing():
 def test_regional_licence_categories():
     cats = toy_data()["license"].apply(cleaning.regional_licence)
     assert cats.tolist() == [
-        "hut",
+        "tourist_flat",
         "missing",
         "exempt_seasonal",
         "missing",
         "hotel_or_hostel",
-        "hut",
+        "tourist_flat",
     ]
 
 
@@ -104,3 +104,20 @@ def test_professional_flag():
     out = cleaning.add_columns(toy_data())
     assert out.loc[out["id"] == 2, "is_professional"].item() == True
     assert out.loc[out["id"] == 1, "is_professional"].item() == False
+
+
+def test_tourist_flat_codes_in_other_regions():
+    section = "Region - Regional registration number<br />"
+    codes = {
+        "VT-12345": "tourist_flat",  # Madrid
+        "VT-12345-V": "tourist_flat",  # Valencia
+        "VT12345": "tourist_flat",  # Madrid, no hyphen
+        "CV-VUT0012345-V": "tourist_flat",  # Valencia
+        "VFT/MA/12345": "tourist_flat",  # Andalucía
+        "VUT-SE-12345": "tourist_flat",  # Andalucía, hyphen variant
+        "CTC-2024123456": "other_code",  # generic Andalusian register ID
+        "HM-1234": "other_code",  # type not confirmed
+        "not available": "other",
+    }
+    for code, expected in codes.items():
+        assert cleaning.regional_licence(section + code) == expected
