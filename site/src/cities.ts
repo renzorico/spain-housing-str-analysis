@@ -33,7 +33,7 @@ const MEASURES: Record<Measure, MeasureInfo> = {
   share_tourist_licence: {
     label: "Tourist licence",
     axis: `% of ${POPULATION} showing a tourist-flat licence →`,
-    note: "Outside Catalonia this is a lower bound: only confirmed regional codes are counted. Airbnb's licence form also changed in June 2026, in every city.",
+    note: "Outside Catalonia this is a lower bound: only confirmed regional codes are counted. Airbnb's licence form also changed during these months (the “exempt – seasonal rental” option appears in Barcelona, Madrid and Valencia, almost never in Málaga or Sevilla).",
   },
   share_professional: {
     label: "Accounts with 5+",
