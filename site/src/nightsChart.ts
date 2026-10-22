@@ -2,8 +2,9 @@
 // movable legal line.
 import * as Plot from "@observablehq/plot";
 
+import { mountChart, plotStyle } from "./charts";
 import { CITIES, CITY_LABELS, type City, type NightsRow } from "./data";
-import { cssVar, el, formatInt, formatPct, onThemeChange, requireElement, segmented } from "./ui";
+import { cssVar, el, formatInt, formatPct, requireElement, segmented } from "./ui";
 
 const MAX_NIGHTS_SHOWN = 60; // longer minimum stays are summarised in the readout
 const CHART_HEIGHT = 300;
@@ -27,6 +28,7 @@ export function initNightsChart(rows: NightsRow[], legalLine: number): void {
   let city: City = "barcelona";
   let round = roundsFor(city).at(-1) ?? "";
   let line = legalLine;
+  let render = () => {}; // replaced by mountChart below
 
   function bars(): { shown: Bar[]; total: number; beyond: number } {
     const selected = rows.filter((r) => r.city === city && r.round === round);
@@ -44,9 +46,9 @@ export function initNightsChart(rows: NightsRow[], legalLine: number): void {
     return { shown, total, beyond };
   }
 
-  function render(): void {
+  function draw(width: number): Element {
     const { shown, total, beyond } = bars();
-    const width = Math.max(320, chart.clientWidth);
+    updateReadout(shown, total, beyond);
     const tickStep = width < NARROW_WIDTH ? 10 : 5;
     const tipText = (d: Bar) =>
       [
@@ -60,7 +62,7 @@ export function initNightsChart(rows: NightsRow[], legalLine: number): void {
       height: CHART_HEIGHT,
       marginLeft: 40,
       marginBottom: 36,
-      style: { background: "transparent", color: cssVar("--text") },
+      style: plotStyle(),
       x: {
         label: "minimum stay (nights) →",
         type: "band",
@@ -92,8 +94,10 @@ export function initNightsChart(rows: NightsRow[], legalLine: number): void {
       "aria-label",
       `Bar chart: share of active ${CITY_LABELS[city]} listings by minimum stay, ${round}.`,
     );
-    chart.replaceChildren(plot);
+    return plot;
+  }
 
+  function updateReadout(shown: Bar[], total: number, beyond: number): void {
     const touristSide = shown.filter((b) => b.side === "tourist").reduce((s, b) => s + b.listings, 0);
     const nearLine = shown.filter((b) => b.nights === line || b.nights === line + 1).reduce((s, b) => s + b.listings, 0);
     readout.replaceChildren(
@@ -160,15 +164,5 @@ export function initNightsChart(rows: NightsRow[], legalLine: number): void {
     sliderGroup,
   );
   renderRoundControl();
-  render();
-
-  // Re-render only when the width really changes, so a redraw cannot
-  // trigger another resize callback.
-  let lastWidth = chart.clientWidth;
-  new ResizeObserver(() => {
-    if (chart.clientWidth === lastWidth) return;
-    lastWidth = chart.clientWidth;
-    render();
-  }).observe(chart);
-  onThemeChange(render);
+  render = mountChart(chart, draw);
 }

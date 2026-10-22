@@ -382,3 +382,67 @@ footer a {
   flex-basis: 100%;
   margin: 4px 0 0;
 }
+
+h3 {
+  font-size: 1.15rem;
+  margin: 1.6em 0 0.4em;
+}
+
+/* ---- policy lever cards ---- */
+.cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+@media (min-width: 760px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+
+.card h3 {
+  margin: 0 0 4px;
+}
+
+.card .law {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0 0 10px;
+}
+
+.card dl {
+  margin: 0;
+}
+
+.card dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
+.card dd {
+  margin: 2px 0 0;
+  font-size: 0.95rem;
+}
+
+.card a {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+/* Plot wraps charts that have a legend in <figure>, which browsers give a
+   40px side margin by default. */
+.chart figure {
+  margin: 0;
+}

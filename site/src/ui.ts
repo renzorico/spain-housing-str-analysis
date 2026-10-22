@@ -76,3 +76,9 @@ export function segmented<V extends string>(
 export function onThemeChange(callback: () => void): void {
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", callback);
 }
+
+/** "2024-01-01" -> "Q1 2024" (a calendar quarter, e.g. for rent data). */
+export function formatCalendarQuarter(isoDate: string): string {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  return `Q${Math.floor(date.getUTCMonth() / 3) + 1} ${date.getUTCFullYear()}`;
+}
