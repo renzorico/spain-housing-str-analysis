@@ -147,6 +147,8 @@ export function initExitGap(cities: CityRow[]): void {
   const rows = CITIES.map((c) => cities.find((row) => row.city === c)).filter((r): r is CityRow => r !== undefined);
   const barcelona = rows.find((r) => r.city === "barcelona");
   if (!barcelona) return;
+  const colour = (r: CityRow) => (r.city === "barcelona" ? cssVar("--seasonal") : cssVar("--tourist"));
+  const signed = (value: number) => `${value > 0 ? "+" : ""}${value}`;
 
   mountChart(chart, (width) => {
     const plot = Plot.plot({
@@ -154,7 +156,7 @@ export function initExitGap(cities: CityRow[]): void {
       height: 220,
       marginLeft: 80,
       style: plotStyle(),
-      x: { label: "exit gap, percentage points (month-plus minus tourist) →", grid: true, nice: true },
+      x: { label: "exit gap, percentage points (month-plus minus shorter stays) →", grid: true, nice: true },
       y: { label: null, domain: rows.map((r) => CITY_LABELS[r.city]) },
       marks: [
         Plot.ruleX([0], { stroke: cssVar("--muted") }),
@@ -162,38 +164,59 @@ export function initExitGap(cities: CityRow[]): void {
           y: (r: CityRow) => CITY_LABELS[r.city],
           x1: (r: CityRow) => r.exit_gap.ci_low,
           x2: (r: CityRow) => r.exit_gap.ci_high,
-          stroke: (r: CityRow) => (r.city === "barcelona" ? cssVar("--seasonal") : cssVar("--tourist")),
+          stroke: colour,
           strokeWidth: 3,
         }),
         Plot.dot(rows, {
           y: (r: CityRow) => CITY_LABELS[r.city],
           x: (r: CityRow) => r.exit_gap.points,
           r: 6,
-          fill: (r: CityRow) => (r.city === "barcelona" ? cssVar("--seasonal") : cssVar("--tourist")),
+          fill: colour,
           tip: true,
-          title: (r: CityRow) =>
-            `${CITY_LABELS[r.city]}: ${r.exit_gap.points > 0 ? "+" : ""}${r.exit_gap.points} points\n95% CI [${r.exit_gap.ci_low}, ${r.exit_gap.ci_high}]`,
+          title: (r: CityRow) => {
+            const g = r.exit_gap;
+            return [
+              `${CITY_LABELS[r.city]}: ${signed(g.points)} points`,
+              `95% interval (host accounts resampled): ${g.ci_low} to ${g.ci_high}`,
+              `${formatInt(g.month_plus_listings)} month-plus and ${formatInt(g.shorter_listings)} shorter-stay listings, ${formatInt(g.accounts)} host accounts`,
+              `${g.top10_accounts_share_of_month_plus_pct}% of the month-plus listings belong to the 10 largest accounts`,
+              g.vs_barcelona ? `Barcelona minus ${CITY_LABELS[r.city]}: ${signed(g.vs_barcelona.difference_points)} (${g.vs_barcelona.ci_low} to ${g.vs_barcelona.ci_high})` : "",
+            ]
+              .filter(Boolean)
+              .join("\n");
+          },
         }),
       ],
     });
-    plot.setAttribute("aria-label", "Dot chart with 95% confidence intervals: exit gap by city.");
+    plot.setAttribute("aria-label", "Dot chart with 95% intervals that resample host accounts: exit gap by city.");
     return plot;
   });
 
-  // The conclusion is computed, not written in: which cities' intervals
-  // overlap Barcelona's?
-  const others = rows.filter((r) => r.city !== "barcelona");
-  const overlaps = (r: CityRow) => r.exit_gap.ci_low <= barcelona.exit_gap.ci_high && r.exit_gap.ci_high >= barcelona.exit_gap.ci_low;
-  const similar = others.filter(overlaps).map((r) => CITY_LABELS[r.city]);
-  const different = others.filter((r) => !overlaps(r)).map((r) => `${CITY_LABELS[r.city]} (${r.exit_gap.points > 0 ? "+" : ""}${r.exit_gap.points})`);
+  // The sentences below are computed from the contrast intervals (Barcelona
+  // minus each city), which test the quantity discussed. Overlapping
+  // separate intervals are never used as a test.
+  const others = rows.filter((r) => r.city !== "barcelona" && r.exit_gap.vs_barcelona);
+  const distinguishable = others.filter((r) => {
+    const contrast = r.exit_gap.vs_barcelona;
+    return contrast !== null && (contrast.ci_low > 0 || contrast.ci_high < 0);
+  });
   const gap = barcelona.exit_gap;
+  const clearGap = rows.filter((r) => r.exit_gap.ci_low > 0).map((r) => CITY_LABELS[r.city]);
+  const includesZero = rows.filter((r) => r.exit_gap.ci_low <= 0).map((r) => CITY_LABELS[r.city]);
+  const contrasts = others
+    .map((r) => {
+      const c = r.exit_gap.vs_barcelona;
+      return c ? `${CITY_LABELS[r.city]} ${signed(c.difference_points)} (${c.ci_low} to ${c.ci_high})` : "";
+    })
+    .join("; ");
   readout.textContent =
-    `Barcelona: month-plus listings were ${gap.points} points more likely to be gone by September than tourist listings (95% CI ${gap.ci_low} to ${gap.ci_high}). ` +
-    (similar.length
-      ? `${similar.join(", ")} — none of them under the Catalan law — show gaps in the same range. `
-      : "No other city shows a gap in the same range. ") +
-    (different.length ? `${different.join(", ")} ${different.length === 1 ? "is" : "are"} the exception. ` : "") +
-    (similar.length
-      ? "So the data does not single out the Catalan seasonal-rent cap: month-plus listings churn faster in most of these cities."
-      : "The timing matches the Catalan seasonal-rent cap, but a difference in timing is not proof of a cause.");
+    `Barcelona: month-plus listings were ${gap.points} points more likely than shorter-stay listings to be absent from the September scrape (95% interval ${gap.ci_low} to ${gap.ci_high}). ` +
+    `The interval is above zero for ${clearGap.join(", ")}` +
+    (includesZero.length ? ` and includes zero for ${includesZero.join(" and ")}. ` : ". ") +
+    `Barcelona minus each other city: ${contrasts}. ` +
+    (distinguishable.length === 0
+      ? "Every one of these differences includes zero: the data cannot distinguish Barcelona's gap from any of the four other cities' gaps. "
+      : `Barcelona's gap is clearly different from ${distinguishable.map((r) => CITY_LABELS[r.city]).join(", ")}; the others cannot be told apart from it. `) +
+    `The intervals resample host accounts, because one operator can withdraw many listings at once. Treating listings as independent would give Barcelona ${gap.listing_level_ci_low} to ${gap.listing_level_ci_high}, which is too narrow. ` +
+    "This compares timing across cities; it is not an estimate of any rule's effect, and a single Barcelona snapshot before January cannot establish a common trend.";
 }

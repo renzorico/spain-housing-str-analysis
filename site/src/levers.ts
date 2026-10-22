@@ -61,11 +61,12 @@ function dataShows(id: string, { meta, register, rents, trends, cities }: Inputs
       const others = CITIES.filter((c) => c !== "barcelona")
         .map((c) => shareIn(c))
         .filter((v): v is number => v !== undefined);
+      const clearGapCities = cities.filter((c) => c.exit_gap.ci_low > 0).map((c) => CITY_LABELS[c.city]);
       if (!first || !second || !last || barcelona === undefined || others.length === 0) return "";
       return (
         `${formatPct(barcelona, 0)} of Barcelona's ${POPULATION} ask 31+ nights, vs ${Math.round(Math.min(...others))}–${Math.round(Math.max(...others))}% in ${CITIES.filter((c) => c !== "barcelona").map((c) => CITY_LABELS[c]).join(", ")}. ` +
         `Seasonal-band listings went from ${formatInt(first.bands.seasonal)} (${formatQuarter(first.snapshot)}) to ${formatInt(second.bands.seasonal)} (${formatQuarter(second.snapshot)}) and ${formatInt(last.bands.seasonal)} (${formatQuarter(last.snapshot)}). ` +
-        "Month-plus listings left Airbnb faster than tourist ones in most of the five cities, not only in Catalonia."
+        `Month-plus listings were clearly more likely than shorter-stay ones to be absent from the later scrape in ${clearGapCities.length} of 5 cities (${clearGapCities.join(", ")}; host-account intervals above zero), and Barcelona's gap cannot be told apart from any other city's.`
       );
     }
     case "owners_vote_catalonia":

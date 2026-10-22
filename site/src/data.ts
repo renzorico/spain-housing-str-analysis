@@ -106,6 +106,23 @@ export interface PopulationCheck {
   month_plus_pct: number;
 }
 
+export interface ExitGap {
+  points: number;
+  /** 95% interval resampling host accounts (the one to quote) */
+  ci_low: number;
+  ci_high: number;
+  method: string;
+  /** naive interval treating listings as independent; understated */
+  listing_level_ci_low: number;
+  listing_level_ci_high: number;
+  accounts: number;
+  month_plus_listings: number;
+  shorter_listings: number;
+  top10_accounts_share_of_month_plus_pct: number;
+  /** Barcelona minus this city; null for Barcelona itself */
+  vs_barcelona: { difference_points: number; ci_low: number; ci_high: number } | null;
+}
+
 export interface CityRow {
   city: City;
   scrape_dates: Record<string, string>;
@@ -115,7 +132,7 @@ export interface CityRow {
     all_listings: PopulationCheck;
   };
   rounds: Record<string, SnapshotSummary>;
-  exit_gap: { points: number; ci_low: number; ci_high: number };
+  exit_gap: ExitGap;
   top_host_share: Record<string, number>;
 }
 
