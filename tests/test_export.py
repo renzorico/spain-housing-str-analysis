@@ -71,3 +71,21 @@ def test_neighbourhood_totals_reconcile_with_the_city_totals():
         sum(r["registered_huts"] for r in rows) + rec["register_without_known_neighbourhood"]
         == rec["register_total"]
     )
+
+
+def test_every_published_share_matches_its_own_counts():
+    for row in load("cities.json"):
+        for round_name, summary in row["rounds"].items():
+            assert summary["population"] == "listings with open dates"
+            for name, (numerator, denominator) in summary["counts"].items():
+                assert denominator == summary["active"], (row["city"], round_name, name)
+                assert summary[name] == round(100 * numerator / denominator, 1), (row["city"], round_name, name)
+
+
+def test_availability_sensitivity_populations_are_nested():
+    for row in load("cities.json"):
+        check = row["availability_sensitivity"]
+        sizes = [check[k]["listings"] for k in ("open_dates", "open_dates_or_reviewed_12m", "all_listings")]
+        assert sizes == sorted(sizes), row["city"]
+        for population in check.values():
+            assert population["known_minimum_stay"] + population["unknown_minimum_stay"] == population["listings"]

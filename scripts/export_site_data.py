@@ -129,7 +129,8 @@ def meta() -> dict:
         ],
         "caveats": [
             "Prices are asking prices, not what guests paid; every Dec 2025 snapshot has no prices.",
-            "Only active listings (at least one open date) are counted; listings with no open dates jump to ~22-24% in every city's Sep 2026 snapshot.",
+            "The population is listings with at least one open date in the next 365 days. An empty calendar can mean booked, blocked or withdrawn, and listings with no open dates jump to ~22-24% in every city's Sep 2026 snapshot. The 31+ share in Barcelona is 41.7% / 41.5% / 39.9% under three population definitions (see the note under the first chart).",
+            "A listing that is absent from a later scrape may have been withdrawn, re-listed under a new id, or missed by the scrape.",
             "Tourist-licence shares outside Catalonia are a lower bound: only confirmed regional codes are counted.",
             "A missing or unmatched licence number is not proof of an illegal listing.",
             "Airbnb's licence form changed: the 'Exempt - seasonal rental' option first appears in Jun 2026, so licence categories are not comparable across that date.",
@@ -139,7 +140,7 @@ def meta() -> dict:
 
 
 def map_points(df: pd.DataFrame) -> dict:
-    """Columnar arrays for one snapshot's active listings."""
+    """Columnar arrays for one snapshot's listings with open dates."""
     act = metrics.active(df)
     price = act["price"].where(act["price"].between(1, cfg.MAX_PRICE))
     return {
@@ -164,7 +165,7 @@ def map_points(df: pd.DataFrame) -> dict:
 
 
 def minimum_nights(snapshots: dict) -> list:
-    """Active listings per minimum stay, with median asking price per bar."""
+    """Listings with open dates per minimum stay, with median asking price per bar."""
     rows = []
     for (city, snapshot), df in snapshots.items():
         act = metrics.active(df)
@@ -253,6 +254,12 @@ def cities(snapshots: dict) -> list:
                     round_label(city, d): metrics.snapshot_summary(snapshots[(city, d)])
                     for d in dates
                 },
+                # Exact scrape days: the five cities were not observed on the
+                # same dates.
+                "scrape_dates": {round_label(city, d): d for d in dates},
+                "availability_sensitivity": metrics.availability_sensitivity(
+                    snapshots[(city, dates[-1])]
+                ),
                 "exit_gap": {
                     "points": round(gap, 1),
                     "ci_low": round(gap - 1.96 * se, 1),
