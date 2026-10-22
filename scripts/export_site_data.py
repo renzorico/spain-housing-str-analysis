@@ -240,13 +240,52 @@ def transitions(snapshots: dict) -> dict:
     return out
 
 
+def exit_gap_estimates(snapshots: dict) -> dict:
+    """Exit gap per city with host-account bootstrap intervals, plus the
+    Barcelona-minus-city contrast for each comparison city.
+
+    The earlier listing-level interval treats every listing as independent
+    and is kept only to show how much narrower it is. Each city has its own
+    seed (cfg.SEED + its position in src.SNAPSHOTS) so results do not depend
+    on the order cities are processed.
+    """
+    estimates, draws = {}, {}
+    for index, (city, dates) in enumerate(src.SNAPSHOTS.items()):
+        earlier, later = snapshots[(city, dates[0])], snapshots[(city, dates[-1])]
+        accounts = metrics.exit_gap_cohort(earlier, later)
+        draws[city] = metrics.exit_gap_draws(accounts, seed=cfg.SEED + index)
+        gap, se = metrics.exit_gap(metrics.transitions(earlier, later))
+        low, high = metrics.percentile_interval(draws[city])
+        estimates[city] = {
+            "points": round(gap, 1),
+            "ci_low": low,
+            "ci_high": high,
+            "method": f"{metrics.BOOTSTRAP_DRAWS} bootstrap draws resampling host accounts, 95% percentile interval",
+            "listing_level_ci_low": round(gap - 1.96 * se, 1),
+            "listing_level_ci_high": round(gap + 1.96 * se, 1),
+            "accounts": int(len(accounts)),
+            "month_plus_listings": int(accounts["month_n"].sum()),
+            "shorter_listings": int(accounts["short_n"].sum()),
+            "top10_accounts_share_of_month_plus_pct": metrics.top_account_share(accounts),
+            "vs_barcelona": None,
+        }
+    for city in src.SNAPSHOTS:
+        if city == "barcelona":
+            continue
+        difference = metrics.contrast_draws(draws["barcelona"], draws[city])
+        low, high = metrics.percentile_interval(difference)
+        estimates[city]["vs_barcelona"] = {
+            "difference_points": round(estimates["barcelona"]["points"] - estimates[city]["points"], 1),
+            "ci_low": low,
+            "ci_high": high,
+        }
+    return estimates
+
+
 def cities(snapshots: dict) -> list:
+    estimates = exit_gap_estimates(snapshots)
     rows = []
     for city, dates in src.SNAPSHOTS.items():
-        table = metrics.transitions(
-            snapshots[(city, dates[0])], snapshots[(city, dates[-1])]
-        )
-        gap, se = metrics.exit_gap(table)
         rows.append(
             {
                 "city": city,
@@ -260,11 +299,7 @@ def cities(snapshots: dict) -> list:
                 "availability_sensitivity": metrics.availability_sensitivity(
                     snapshots[(city, dates[-1])]
                 ),
-                "exit_gap": {
-                    "points": round(gap, 1),
-                    "ci_low": round(gap - 1.96 * se, 1),
-                    "ci_high": round(gap + 1.96 * se, 1),
-                },
+                "exit_gap": estimates[city],
                 "top_host_share": {
                     f"top_{p}pct": metrics.top_host_share(
                         snapshots[(city, dates[-1])], p

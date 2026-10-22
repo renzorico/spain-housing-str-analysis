@@ -89,3 +89,26 @@ def test_availability_sensitivity_populations_are_nested():
         assert sizes == sorted(sizes), row["city"]
         for population in check.values():
             assert population["known_minimum_stay"] + population["unknown_minimum_stay"] == population["listings"]
+
+
+def test_exit_gap_cohorts_match_the_transition_tables():
+    transitions = load("transitions.json")["cities"]
+    for row in load("cities.json"):
+        gap, table = row["exit_gap"], transitions[row["city"]]
+        sums = {band: sum(counts) for band, counts in zip(table["from"], table["counts"])}
+        assert gap["month_plus_listings"] == sums["boundary"] + sums["seasonal"], row["city"]
+        assert gap["shorter_listings"] == sums["tourist"], row["city"]
+        assert gap["ci_low"] <= gap["points"] <= gap["ci_high"], row["city"]
+        # the account-level interval must not be narrower than the naive one
+        assert gap["ci_high"] - gap["ci_low"] >= gap["listing_level_ci_high"] - gap["listing_level_ci_low"]
+
+
+def test_contrasts_are_barcelona_minus_the_city():
+    cities = {row["city"]: row["exit_gap"] for row in load("cities.json")}
+    assert cities["barcelona"]["vs_barcelona"] is None
+    for city, gap in cities.items():
+        if city == "barcelona":
+            continue
+        contrast = gap["vs_barcelona"]
+        assert contrast["difference_points"] == round(cities["barcelona"]["points"] - gap["points"], 1)
+        assert contrast["ci_low"] <= contrast["difference_points"] <= contrast["ci_high"]
