@@ -8,6 +8,7 @@ an address.
 import json
 import re
 import zipfile
+from datetime import date
 
 import pandas as pd
 
@@ -22,6 +23,30 @@ QUARTER_START_MONTH = {
     "juliol-setembre": 7,
     "octubre-desembre": 10,
 }
+
+
+def quarter_end(code: str) -> date:
+    """'2026_3T' -> 30 Sep 2026. The register file for a quarter holds the
+    data published in that quarter's last week."""
+    year, quarter = code.split("_")
+    month = int(quarter.rstrip("T")) * 3
+    last_day = {3: 31, 6: 30, 9: 30, 12: 31}[month]
+    return date(int(year), month, last_day)
+
+
+def register_quarter_for(snapshot: str) -> str:
+    """The published register quarter nearest in time to an Inside Airbnb
+    snapshot date ('2026-06-24').
+
+    2026 Q2 is missing from the portal, so the June 2026 snapshot is matched
+    to 2026 Q1 (85 days away, against 98 for Q3). Ties go to the earlier
+    quarter.
+    """
+    day = date.fromisoformat(snapshot)
+    return min(
+        src.HUT_REGISTER_URLS,
+        key=lambda code: (abs((quarter_end(code) - day).days), quarter_end(code)),
+    )
 
 
 def normalise_place_name(name: str) -> str:
@@ -42,6 +67,16 @@ def hut_counts_by_neighbourhood(quarter: str) -> pd.Series:
         "N_EXPEDIENT"
     ].nunique()
     return counts.rename("registered_huts")
+
+
+def register_record_count(quarter: str) -> int:
+    """Distinct administrative records (case ids) in one register quarter.
+    Not the same unit as the HUT numbers: a few records have no usable
+    number, and the headline stock counts records."""
+    path = src.hut_register_path(quarter)
+    with zipfile.ZipFile(path) as archive, archive.open(archive.infolist()[0]) as handle:
+        register = pd.read_csv(handle, usecols=["N_EXPEDIENT"], dtype=str)
+    return int(register["N_EXPEDIENT"].nunique())
 
 
 def registered_hut_numbers(quarter: str) -> set[str]:
