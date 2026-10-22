@@ -98,6 +98,51 @@ export interface Register {
   match: RegisterMatch[];
 }
 
+export const BANDS = ["tourist", "boundary", "seasonal"] as const;
+export type Band = (typeof BANDS)[number];
+
+/** Where one snapshot's active listings were in a later snapshot. */
+export interface TransitionTable {
+  from_snapshot: string;
+  to_snapshot: string;
+  from: Band[];
+  to: string[]; // the bands, then "inactive" and "gone"
+  counts: number[][];
+}
+
+export interface Transitions {
+  cities: Record<City, TransitionTable>;
+  barcelona_quarters: TransitionTable[];
+}
+
+export type Concentration = Record<City, { host_share: number[]; listing_share: number[] }>;
+
+export interface NeighbourhoodRow {
+  neighbourhood: string;
+  district: string;
+  active_listings: number;
+  with_tourist_licence: number;
+  registered_huts: number;
+  share_month_plus: number | null;
+  share_professional: number | null;
+  median_price: number | null;
+}
+
+export interface RentRow {
+  quarter_start: string;
+  avg_rent: number;
+  new_leases: number;
+  yoy_pct: number | null;
+}
+
+export interface BarcelonaTrend {
+  snapshot: string;
+  bands: Record<Band, number>;
+  regional_licence: Record<string, number>;
+  national_licence: Record<string, number>;
+  median_price_by_band: Record<Band, number | null>;
+}
+
 async function loadJson<T>(file: string): Promise<T> {
   const response = await fetch(`data/${file}`);
   if (!response.ok) {
@@ -110,6 +155,11 @@ export const loadMeta = () => loadJson<Meta>("meta.json");
 export const loadNights = () => loadJson<NightsRow[]>("minimum_nights.json");
 export const loadCities = () => loadJson<CityRow[]>("cities.json");
 export const loadRegister = () => loadJson<Register>("register.json");
+export const loadTransitions = () => loadJson<Transitions>("transitions.json");
+export const loadConcentration = () => loadJson<Concentration>("concentration.json");
+export const loadNeighbourhoods = () => loadJson<NeighbourhoodRow[]>("neighbourhoods.json");
+export const loadRents = () => loadJson<RentRow[]>("rents.json");
+export const loadTrends = () => loadJson<BarcelonaTrend[]>("barcelona_trends.json");
 
 // Map files are ~400 kB each, so they are fetched on demand and cached.
 const pointsCache = new Map<string, Promise<Points>>();
