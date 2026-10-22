@@ -27,7 +27,7 @@ OTHER_CITIES = ["madrid", "valencia", "malaga", "sevilla"]
 
 # Same palette as the site's light theme (site/src/styles.css).
 BG, TEXT, MUTED = "#fbfaf7", "#1c1c1e", "#5f6368"
-TOURIST, SEASONAL = "#2f6fb3", "#e07b24"
+UNDER, EXACT, OVER = "#2f6fb3", "#8a8f98", "#e07b24"
 
 
 def load(name: str):
@@ -61,7 +61,7 @@ def main() -> None:
     fig.text(
         0.05,
         0.74,
-        f"{barcelona_share:.0f}% of Barcelona's active Airbnb listings ask for 31 nights or more.",
+        f"{barcelona_share:.0f}% of Barcelona's listings with open dates ask for 31+ nights.",
         fontsize=21,
         color=TEXT,
         va="center",
@@ -78,31 +78,27 @@ def main() -> None:
     ax = fig.add_axes((0.05, 0.14, 0.9, 0.44), facecolor=BG)
     xs = [r["nights"] for r in shown]
     ys = [r["listings"] / total * 100 for r in shown]
-    colours = [TOURIST if n <= cfg.MAX_TOURIST_NIGHTS else SEASONAL for n in xs]
+    # Colour by what listings ask (under 31 / exactly 31 / over 31 nights),
+    # never by legality: a minimum stay is a setting, not a legal finding.
+    colours = [
+        UNDER if n < cfg.STAY_LINE_NIGHTS else (EXACT if n == cfg.STAY_LINE_NIGHTS else OVER)
+        for n in xs
+    ]
     ax.bar(xs, ys, color=colours, width=0.8)
-    ax.axvline(cfg.MAX_TOURIST_NIGHTS + 0.5, color=TEXT, linestyle="--", linewidth=1.2)
-    # One label each side of the line, pointing at its own side.
+    ax.axvline(cfg.STAY_LINE_NIGHTS, color=TEXT, linestyle="--", linewidth=1.2, zorder=0)
     ax.text(
-        cfg.MAX_TOURIST_NIGHTS - 0.2,
+        cfg.STAY_LINE_NIGHTS - 1,
         max(ys) * 0.92,
-        "tourist use ←",
+        "Catalan tourist-stay limit: 31 days",
         fontsize=13,
-        color=TOURIST,
+        color=MUTED,
         ha="right",
-    )
-    ax.text(
-        cfg.MAX_TOURIST_NIGHTS + 1.2,
-        max(ys) * 0.92,
-        "→ seasonal let",
-        fontsize=13,
-        color=SEASONAL,
-        ha="left",
     )
     ax.set_xlim(0.3, MAX_NIGHTS_SHOWN + 0.7)
     ax.set_xticks([1, 10, 20, 31, 40])
     ax.tick_params(colors=MUTED, labelsize=12, length=0)
     ax.set_xlabel(
-        "minimum stay asked (nights) · Barcelona, September 2026",
+        "minimum stay asked (nights) · Barcelona listings with open dates, September 2026",
         fontsize=12,
         color=MUTED,
     )
