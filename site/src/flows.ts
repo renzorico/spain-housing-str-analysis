@@ -5,6 +5,8 @@ import { mountChart, plotStyle } from "./charts";
 import { BANDS, CITIES, CITY_LABELS, type Band, type City, type CityRow, type TransitionTable, type Transitions } from "./data";
 import { cssVar, el, formatInt, formatPct, formatQuarter, POPULATION, requireElement, segmented } from "./ui";
 
+const NARROW_WIDTH = 520; // below this, shorter axis titles
+
 const BAND_LABELS: Record<Band, string> = {
   under_31: "Under 31",
   exactly_31: "Exactly 31",
@@ -156,7 +158,7 @@ export function initExitGap(cities: CityRow[]): void {
       height: 220,
       marginLeft: 80,
       style: plotStyle(),
-      x: { label: "exit gap, percentage points (month-plus minus shorter stays) →", grid: true, nice: true },
+      x: { label: width < NARROW_WIDTH ? "exit gap, points →" : "exit gap, percentage points (month-plus minus shorter stays) →", grid: true, nice: true },
       y: { label: null, domain: rows.map((r) => CITY_LABELS[r.city]) },
       marks: [
         Plot.ruleX([0], { stroke: cssVar("--muted") }),
