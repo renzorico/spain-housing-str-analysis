@@ -57,6 +57,89 @@
           privacy. No host or listing is identified on this page.
         </p>
       </section>
+
+      <section id="flows" aria-labelledby="flows-title">
+        <h2 id="flows-title">Where did December's listings go?</h2>
+        <p>
+          Inside Airbnb keeps the same id for a listing across snapshots, so each active listing
+          from December 2025 can be followed. By September it is in the same band, has switched
+          band, is still listed but has no open dates, or is gone from the file.
+        </p>
+        <div class="controls" id="flows-controls"></div>
+        <div class="chart" id="flows-chart" role="img"></div>
+        <h3>Is Barcelona different?</h3>
+        <p>
+          Month-plus listings (31+ nights) left faster than tourist ones in Barcelona. Catalonia
+          extended its rent cap to seasonal lets on 1 January 2026, so the obvious question is
+          whether the law explains it. The test: the same gap in cities where that law does not
+          apply.
+        </p>
+        <div class="chart" id="gap-chart" role="img"></div>
+        <p class="readout" id="gap-readout"></p>
+      </section>
+
+      <section id="cities" aria-labelledby="cities-title">
+        <h2 id="cities-title">Five cities, two snapshots</h2>
+        <p>
+          The same measures for each city, December 2025 and September 2026. Only active listings
+          are counted.
+        </p>
+        <div class="controls" id="cities-controls"></div>
+        <div class="chart" id="cities-chart" role="img"></div>
+        <p class="note" id="cities-note"></p>
+      </section>
+
+      <section id="concentration" aria-labelledby="concentration-title">
+        <h2 id="concentration-title">Who supplies the market?</h2>
+        <p>
+          Hosts ranked from largest to smallest. How many of the listings do the biggest ones run?
+          If every host ran the same number, the curve would be the diagonal.
+        </p>
+        <div class="controls" id="concentration-controls"></div>
+        <div class="chart" id="concentration-chart" role="img"></div>
+        <p class="readout" id="concentration-readout" aria-live="polite"></p>
+      </section>
+
+      <section id="register" aria-labelledby="register-title">
+        <h2 id="register-title">Licences on paper, listings online</h2>
+        <p>
+          Barcelona publishes its register of tourist flats (HUT) every quarter. It is the legal
+          count of licences, which Airbnb listings are not. How do the two compare?
+        </p>
+        <div class="stats" id="register-stats"></div>
+        <div class="chart" id="register-chart" role="img"></div>
+        <p class="note">
+          One dot per neighbourhood, September 2026. Dots above the diagonal have more active
+          listings than registered flats. Colour shows the share of listings asking 31+ nights,
+          which need no tourist licence.
+        </p>
+      </section>
+
+      <section id="rents" aria-labelledby="rents-title">
+        <h2 id="rents-title">What rents did</h2>
+        <p>
+          The average monthly rent of new leases in Barcelona, from the deposits landlords lodge
+          with the Catalan housing agency. Dashed lines mark when the rent cap and its extension
+          to seasonal lets started.
+        </p>
+        <div class="controls" id="rents-controls"></div>
+        <div class="chart" id="rents-chart" role="img"></div>
+        <p class="note">
+          The timing is shown; the cause is not. The average moves when the mix of flats rented
+          changes, and interest rates, wages and supply all move rents at the same time.
+        </p>
+      </section>
+
+      <section id="levers" aria-labelledby="levers-title">
+        <h2 id="levers-title">The rules, one by one</h2>
+        <p>
+          Each rule in force, with what it says, what this data shows about it, and what this data
+          cannot show. Dates and legal references are checked against the official gazettes (BOE,
+          DOGC).
+        </p>
+        <div class="chart" id="timeline-chart" role="img"></div>
+        <div class="cards" id="lever-cards"></div>
+      </section>
     </main>
 
     <footer>

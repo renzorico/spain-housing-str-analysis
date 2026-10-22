@@ -1,6 +1,27 @@
 import "./styles.css";
 
-import { CITIES, CITY_LABELS, loadCities, loadMeta, loadNights, loadRegister, type CityRow, type Meta, type Register } from "./data";
+import { initCities } from "./cities";
+import { initConcentration } from "./concentration";
+import {
+  CITIES,
+  CITY_LABELS,
+  loadCities,
+  loadConcentration,
+  loadMeta,
+  loadNeighbourhoods,
+  loadNights,
+  loadRegister,
+  loadRents,
+  loadTransitions,
+  loadTrends,
+  type CityRow,
+  type Meta,
+  type Register,
+} from "./data";
+import { initExitGap, initFlows } from "./flows";
+import { initLevers } from "./levers";
+import { initRegister } from "./register";
+import { initRents } from "./rents";
 import { initNightsChart } from "./nightsChart";
 import { el, formatPct, requireElement } from "./ui";
 
@@ -48,6 +69,18 @@ function showError(error: unknown): void {
   document.querySelector("main")?.prepend(el("p", { class: "note", role: "alert" }, `Could not load the data: ${message}`));
 }
 
+/** Run one section's setup; if it fails, say so in that section only,
+ *  so the rest of the page still works. */
+function inSection(sectionId: string, setup: () => void): void {
+  try {
+    setup();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Section #${sectionId} failed`, error);
+    requireElement(sectionId).append(el("p", { class: "note", role: "alert" }, `This chart could not be drawn: ${message}`));
+  }
+}
+
 // MapLibre is most of the JavaScript, so it is only downloaded when the
 // reader scrolls near the map.
 const MAP_PRELOAD_MARGIN = "600px";
@@ -78,6 +111,22 @@ async function main(): Promise<void> {
   renderFooter(meta);
   initNightsChart(nights, meta.max_tourist_nights);
   loadMapWhenNear(meta.snapshots.barcelona);
+
+  // The sections below the map: small files, loaded together.
+  const [transitions, concentration, places, rents, trends] = await Promise.all([
+    loadTransitions(),
+    loadConcentration(),
+    loadNeighbourhoods(),
+    loadRents(),
+    loadTrends(),
+  ]);
+  inSection("flows", () => initFlows(transitions));
+  inSection("flows", () => initExitGap(cities));
+  inSection("cities", () => initCities(cities));
+  inSection("concentration", () => initConcentration(concentration));
+  inSection("register", () => initRegister(register, places));
+  inSection("rents", () => initRents(rents, meta));
+  inSection("levers", () => initLevers({ meta, register, rents, trends, cities }));
 }
 
 main().catch(showError);
