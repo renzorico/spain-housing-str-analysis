@@ -1,0 +1,384 @@
+/* Design tokens. Category colours are the same three everywhere:
+   tourist / boundary / seasonal. Picked for contrast in both themes and
+   for colour-blind readers (blue / grey / orange). */
+:root {
+  --bg: #fbfaf7;
+  --surface: #ffffff;
+  --text: #1c1c1e;
+  --muted: #5f6368;
+  --line: #e4e1da;
+  --accent: #0b5cad;
+  --tourist: #2f6fb3;
+  --boundary: #8a8f98;
+  --seasonal: #e07b24;
+  --cat-4: #6a3d9a;
+  --cat-5: #2e9e6f;
+  --cat-6: #c43c5c;
+  --cat-7: #b8b8b8;
+  --radius: 10px;
+  --gutter: 16px;
+  --measure: 68ch;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121316;
+    --surface: #1b1d21;
+    --text: #ececec;
+    --muted: #a2a7ae;
+    --line: #2d3036;
+    --accent: #6aa8ec;
+    --tourist: #6aa8ec;
+    --boundary: #9aa0a8;
+    --seasonal: #f29a4a;
+    --cat-4: #b493e0;
+    --cat-5: #5cc79a;
+    --cat-6: #ef7f98;
+    --cat-7: #6b6f76;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #121316;
+  --surface: #1b1d21;
+  --text: #ececec;
+  --muted: #a2a7ae;
+  --line: #2d3036;
+  --accent: #6aa8ec;
+  --tourist: #6aa8ec;
+  --boundary: #9aa0a8;
+  --seasonal: #f29a4a;
+  --cat-4: #b493e0;
+  --cat-5: #5cc79a;
+  --cat-6: #ef7f98;
+  --cat-7: #6b6f76;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.55 var(--font);
+  -webkit-text-size-adjust: 100%;
+}
+
+header,
+section,
+footer {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 40px var(--gutter);
+}
+
+section + section {
+  border-top: 1px solid var(--line);
+}
+
+p {
+  max-width: var(--measure);
+}
+
+h1 {
+  font-size: clamp(2.2rem, 8vw, 3.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0.2em 0 0.4em;
+}
+
+h2 {
+  font-size: clamp(1.4rem, 5vw, 1.9rem);
+  line-height: 1.2;
+  margin: 0 0 0.5em;
+}
+
+.kicker {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.lede {
+  font-size: 1.1rem;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+/* ---- stat tiles ---- */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.stat strong {
+  display: block;
+  font-size: 2rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (min-width: 640px) {
+  .stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ---- controls: segmented buttons and the slider ---- */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin: 16px 0;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.control-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.segmented button {
+  min-height: 40px; /* comfortable touch target */
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.segmented button[aria-pressed="true"] {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.segmented button:focus-visible,
+input[type="range"]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.slider {
+  width: 100%;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.slider-row output {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  min-width: 5ch;
+}
+
+input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  min-height: 40px;
+}
+
+.controls .control-group.wide {
+  flex: 1 1 100%;
+}
+
+/* ---- chart ---- */
+.chart {
+  width: 100%;
+  overflow: hidden;
+}
+
+.chart svg {
+  max-width: 100%;
+  height: auto;
+  font: 12px var(--font);
+}
+
+.readout {
+  font-variant-numeric: tabular-nums;
+}
+
+.readout .tourist {
+  color: var(--tourist);
+  font-weight: 600;
+}
+
+.readout .seasonal {
+  color: var(--seasonal);
+  font-weight: 600;
+}
+
+/* ---- map ---- */
+.map-wrap {
+  position: relative;
+}
+
+#map {
+  width: 100%;
+  height: 70vh;
+  min-height: 380px;
+  max-height: 720px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.maplibregl-popup-content {
+  background: var(--surface);
+  color: var(--text);
+  font: 13px/1.4 var(--font);
+  border-radius: 8px;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: var(--surface) !important;
+  border-bottom-color: var(--surface) !important;
+}
+
+/* ---- footer ---- */
+footer {
+  border-top: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+
+footer ul {
+  padding-left: 1.1em;
+  max-width: var(--measure);
+}
+
+footer a {
+  color: var(--accent);
+}
+
+/* legend entries double as show/hide toggles */
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.legend-item[aria-pressed="false"] {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.legend-item:focus-visible {
+  outline: 3px solid var(--accent);
+}
+
+.legend .control-label {
+  flex-basis: 100%;
+}
+
+/* On phones, each button row scrolls sideways instead of wrapping, so the
+   chart stays near the top of the screen. */
+@media (max-width: 639px) {
+  .controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Without this, groups grow to the width of their unwrapped buttons. */
+  .controls > *,
+  .control-group {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .segmented {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    min-width: 0;
+    padding-bottom: 2px;
+  }
+
+  .segmented::-webkit-scrollbar {
+    display: none;
+  }
+
+  .segmented button {
+    flex: 0 0 auto;
+    min-height: 36px;
+  }
+}
+
+.legend .note {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+}

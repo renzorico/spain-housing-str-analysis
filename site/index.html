@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The 31-Night Line</title>
+    <meta
+      name="description"
+      content="Short-term rentals and housing rules in Barcelona and four Spanish cities: what the data shows, and what it cannot show."
+    />
+    <meta name="color-scheme" content="light dark" />
+  </head>
+  <body>
+    <header class="hero">
+      <p class="kicker">Barcelona · Madrid · Valencia · Málaga · Sevilla · Dec 2025 – Sep 2026</p>
+      <h1>The 31-night line</h1>
+      <p class="lede">
+        In Catalonia, a stay of 31 days or fewer in a tourist flat needs a tourist licence. Longer
+        stays are seasonal lets, under different rules. This page looks at where Airbnb listings sit
+        against that line, and against the other housing rules in force. It reports what the data
+        shows, and what it cannot show. It takes no position on the rules.
+      </p>
+      <div class="stats" id="hero-stats" aria-live="polite"></div>
+    </header>
+
+    <main>
+      <section id="nights" aria-labelledby="nights-title">
+        <h2 id="nights-title">Where would you draw the line?</h2>
+        <p>
+          Each bar is the share of active listings asking for that minimum stay. Move the line and
+          see how many listings sit on each side. In Barcelona, they pile up at exactly 31 and 32
+          nights.
+        </p>
+        <div class="controls" id="nights-controls"></div>
+        <div class="chart" id="nights-chart" role="img"></div>
+        <p class="readout" id="nights-readout" aria-live="polite"></p>
+        <p class="note">
+          Why 31? A tourist stay is “a continuous period of 31 days or fewer” (Decret 75/2020, art.
+          221-1). Whether a 31-<em>night</em> booking counts as 31 days or fewer is ambiguous, so 31
+          is shown as its own boundary value. Other regions draw their lines differently.
+        </p>
+      </section>
+
+      <section id="map-section" aria-labelledby="map-title">
+        <h2 id="map-title">Every active listing in Barcelona</h2>
+        <p>
+          Colour the map by stay type, by the licence a listing shows, or by how many listings its
+          host runs. Switch quarters to see the market change. Tap a dot for details.
+        </p>
+        <div class="controls" id="map-controls"></div>
+        <div class="map-wrap">
+          <div id="map" aria-label="Map of active Airbnb listings in Barcelona"></div>
+          <div class="legend" id="map-legend"></div>
+        </div>
+        <p class="note">
+          Points are Inside Airbnb's coordinates, which are offset by up to 150 m to protect hosts'
+          privacy. No host or listing is identified on this page.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <h2>Sources and caveats</h2>
+      <ul id="sources"></ul>
+      <ul id="caveats"></ul>
+      <p class="note">
+        Method, code and every number: the project's notebooks and <code>src/</code>. Data licensed
+        CC BY 4.0.
+      </p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
