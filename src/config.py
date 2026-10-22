@@ -15,8 +15,7 @@ FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 # The date Inside Airbnb scraped this file. They publish a new one every
 # quarter, so without this date the numbers cannot be reproduced.
-# Fill in from the download page once the file is downloaded.
-SNAPSHOT_DATE = None
+SNAPSHOT_DATE = "2026-09-17"
 
 # ---- cleaning thresholds ---------------------------------------------
 # Same cap as the Berlin project; re-check against the 99th percentile
