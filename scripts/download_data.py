@@ -1,0 +1,70 @@
+"""Download every raw file listed in src/sources.py into data/raw/.
+
+Skips files that already exist, so it is safe to re-run.
+
+Run with:  python scripts/download_data.py
+"""
+
+import sys
+import urllib.request
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from src import sources as src
+
+USER_AGENT = "spain-housing-str-analysis (research; contact via GitHub)"
+TIMEOUT_SECONDS = 120
+
+
+def download(url: str, target: Path) -> None:
+    """Fetch one URL to target, writing via a temp file so a failed
+    download never leaves a half-written file behind."""
+    if target.exists():
+        print(f"skip  {target.relative_to(src.RAW_DIR)}")
+        return
+    target.parent.mkdir(parents=True, exist_ok=True)
+    partial = target.with_suffix(target.suffix + ".part")
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+        partial.write_bytes(response.read())
+    partial.rename(target)
+    print(
+        f"got   {target.relative_to(src.RAW_DIR)}  ({target.stat().st_size / 1e6:.1f} MB)"
+    )
+
+
+def all_downloads() -> list[tuple[str, Path]]:
+    jobs = []
+    for city, snapshots in src.SNAPSHOTS.items():
+        for snapshot in snapshots:
+            jobs.append(
+                (src.listings_url(city, snapshot), src.listings_path(city, snapshot))
+            )
+        latest = snapshots[-1]
+        jobs.append(
+            (
+                src.listings_url(city, latest, "neighbourhoods.geojson"),
+                src.neighbourhoods_path(city),
+            )
+        )
+    for quarter, url in src.HUT_REGISTER_URLS.items():
+        jobs.append((url, src.hut_register_path(quarter)))
+    jobs.append((src.rents_url(), src.RENTS_PATH))
+    return jobs
+
+
+def main() -> None:
+    failures = []
+    for url, target in all_downloads():
+        try:
+            download(url, target)
+        except OSError as error:  # URLError and HTTPError are OSErrors
+            failures.append(target)
+            print(f"FAIL  {target.relative_to(src.RAW_DIR)}: {error}")
+    if failures:
+        sys.exit(f"{len(failures)} download(s) failed - re-run to retry.")
+
+
+if __name__ == "__main__":
+    main()

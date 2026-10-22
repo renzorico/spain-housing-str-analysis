@@ -1,6 +1,6 @@
 # data is downloaded by hand, never committed (see data/README.md)
-data/raw/*.csv
-data/raw/*.csv.gz
+data/raw/**
+!data/raw/.gitkeep
 data/*.csv
 
 # secrets
