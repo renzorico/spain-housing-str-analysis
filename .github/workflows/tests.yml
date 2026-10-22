@@ -1,0 +1,33 @@
+# Run the full Python test suite on every push and pull request that touches
+# the analysis, the scripts, the tests or the committed site data.
+# No raw data is needed: the suite uses toy data and the committed exports.
+name: Tests
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "tests/**"
+      - "site/public/data/**"
+      - "requirements-test.txt"
+      - ".github/workflows/tests.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install test dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet -r requirements-test.txt
+
+      - name: Run the test suite
+        run: .venv/bin/python -m pytest -q
