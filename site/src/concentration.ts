@@ -1,7 +1,7 @@
 // Host concentration curves, with a "largest X% of hosts" slider.
 import * as Plot from "@observablehq/plot";
 
-import { mountChart, plotStyle } from "./charts";
+import { mountChart, plotStyle, X_TITLE_EXTRA_HEIGHT, X_TITLE_MARGIN } from "./charts";
 import { CITIES, CITY_LABELS, type City, type Concentration } from "./data";
 import { cssVar, el, formatPct, POPULATION, requireElement } from "./ui";
 
@@ -46,7 +46,8 @@ export function initConcentration(curves: Concentration): void {
   function draw(width: number): Element {
     const plot = Plot.plot({
       width,
-      height: 320,
+      height: 320 + X_TITLE_EXTRA_HEIGHT,
+      marginBottom: X_TITLE_MARGIN,
       marginLeft: 44,
       style: plotStyle(),
       x: { label: "largest host accounts, % of all host accounts →", domain: [0, X_MAX] },

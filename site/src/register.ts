@@ -1,7 +1,7 @@
 // The official HUT register against Airbnb listings.
 import * as Plot from "@observablehq/plot";
 
-import { mountChart, plotStyle } from "./charts";
+import { mountChart, plotStyle, X_TITLE_EXTRA_HEIGHT, X_TITLE_MARGIN } from "./charts";
 import type { NeighbourhoodRow, Register } from "./data";
 import { cssVar, el, formatInt, formatPct, formatQuarter, POPULATION, requireElement } from "./ui";
 
@@ -61,7 +61,8 @@ export function initRegister(register: Register, places: NeighbourhoodRow[]): vo
   mountChart(requireElement("register-chart"), (width) => {
     const plot = Plot.plot({
       width,
-      height: Math.min(width, 440),
+      height: Math.min(width, 440) + X_TITLE_EXTRA_HEIGHT,
+      marginBottom: X_TITLE_MARGIN,
       marginLeft: 48,
       style: plotStyle(),
       x: { label: "registered tourist flats (official) →", domain: [0, top], grid: true },

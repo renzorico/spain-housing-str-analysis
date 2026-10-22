@@ -1,7 +1,7 @@
 // Five cities, December vs September: one measure at a time.
 import * as Plot from "@observablehq/plot";
 
-import { mountChart, plotStyle } from "./charts";
+import { mountChart, plotStyle, X_TITLE_EXTRA_HEIGHT, X_TITLE_MARGIN } from "./charts";
 import { CITIES, CITY_LABELS, type CityRow, type SnapshotSummary } from "./data";
 import { cssVar, formatDay, POPULATION, requireElement, segmented } from "./ui";
 
@@ -89,7 +89,8 @@ export function initCities(cities: CityRow[]): void {
     const lastColour = cssVar("--accent");
     const plot = Plot.plot({
       width,
-      height: 240,
+      height: 240 + X_TITLE_EXTRA_HEIGHT,
+      marginBottom: X_TITLE_MARGIN,
       marginLeft: 80,
       style: plotStyle(),
       x: { label: MEASURES[measure].axis, grid: true, nice: true, zero: !isPrice },
@@ -104,8 +105,8 @@ export function initCities(cities: CityRow[]): void {
             y2: (city: string) => city,
             x1: (city: string) => data.find((d) => d.city === city && d.round === FIRST_ROUND)?.value ?? null,
             x2: (city: string) => data.find((d) => d.city === city && d.round === LAST_ROUND)?.value ?? null,
-            stroke: cssVar("--line"),
-            strokeWidth: 3,
+            stroke: cssVar("--muted"),
+            strokeWidth: 2,
           },
         ),
         Plot.dot(data, {

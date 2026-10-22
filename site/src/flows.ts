@@ -1,7 +1,7 @@
 // "Where did December's listings go?" and the exit-gap comparison.
 import * as Plot from "@observablehq/plot";
 
-import { mountChart, plotStyle } from "./charts";
+import { mountChart, plotStyle, X_TITLE_EXTRA_HEIGHT, X_TITLE_MARGIN } from "./charts";
 import { BANDS, CITIES, CITY_LABELS, type Band, type City, type CityRow, type TransitionTable, type Transitions } from "./data";
 import { cssVar, el, formatInt, formatPct, formatQuarter, POPULATION, requireElement, segmented } from "./ui";
 
@@ -92,7 +92,8 @@ export function initFlows(transitions: Transitions): void {
     const t = table();
     const plot = Plot.plot({
       width,
-      height: 200,
+      height: 200 + X_TITLE_EXTRA_HEIGHT,
+      marginBottom: X_TITLE_MARGIN,
       marginLeft: 104,
       style: plotStyle(),
       x: { label: "% of the band's listings with open dates →", domain: [0, 100], grid: true },
@@ -150,12 +151,13 @@ export function initExitGap(cities: CityRow[]): void {
   const barcelona = rows.find((r) => r.city === "barcelona");
   if (!barcelona) return;
   const colour = (r: CityRow) => (r.city === "barcelona" ? cssVar("--seasonal") : cssVar("--tourist"));
-  const signed = (value: number) => `${value > 0 ? "+" : ""}${value}`;
+  const signed = (value: number) => (value > 0 ? `+${value}` : String(value));
 
   mountChart(chart, (width) => {
     const plot = Plot.plot({
       width,
-      height: 220,
+      height: 220 + X_TITLE_EXTRA_HEIGHT,
+      marginBottom: X_TITLE_MARGIN,
       marginLeft: 80,
       style: plotStyle(),
       x: { label: width < NARROW_WIDTH ? "exit gap, points →" : "exit gap, percentage points (month-plus minus shorter stays) →", grid: true, nice: true },
@@ -205,20 +207,40 @@ export function initExitGap(cities: CityRow[]): void {
   const gap = barcelona.exit_gap;
   const clearGap = rows.filter((r) => r.exit_gap.ci_low > 0).map((r) => CITY_LABELS[r.city]);
   const includesZero = rows.filter((r) => r.exit_gap.ci_low <= 0).map((r) => CITY_LABELS[r.city]);
-  const contrasts = others
-    .map((r) => {
-      const c = r.exit_gap.vs_barcelona;
-      return c ? `${CITY_LABELS[r.city]} ${signed(c.difference_points)} (${c.ci_low} to ${c.ci_high})` : "";
-    })
-    .join("; ");
-  readout.textContent =
-    `Barcelona: month-plus listings were ${gap.points} points more likely than shorter-stay listings to be absent from the September scrape (95% interval ${gap.ci_low} to ${gap.ci_high}). ` +
-    `The interval is above zero for ${clearGap.join(", ")}` +
-    (includesZero.length ? ` and includes zero for ${includesZero.join(" and ")}. ` : ". ") +
-    `Barcelona minus each other city: ${contrasts}. ` +
-    (distinguishable.length === 0
-      ? "Every one of these differences includes zero: the data cannot distinguish Barcelona's gap from any of the four other cities' gaps. "
-      : `Barcelona's gap is clearly different from ${distinguishable.map((r) => CITY_LABELS[r.city]).join(", ")}; the others cannot be told apart from it. `) +
-    `The intervals resample host accounts, because one operator can withdraw many listings at once. Treating listings as independent would give Barcelona ${gap.listing_level_ci_low} to ${gap.listing_level_ci_high}, which is too narrow. ` +
-    "This compares timing across cities; it is not an estimate of any rule's effect, and a single Barcelona snapshot before January cannot establish a common trend.";
+  const minus = (value: number) => String(value).replace("-", "−"); // a real minus sign
+  const range = (low: number, high: number) => `${minus(low)} to ${minus(high)}`;
+
+  const contrastList = el("ul");
+  for (const r of others) {
+    const c = r.exit_gap.vs_barcelona;
+    if (!c) continue;
+    contrastList.append(
+      el("li", {}, `${CITY_LABELS[r.city]}: ${signed(c.difference_points).replace("-", "−")} points (95% interval ${range(c.ci_low, c.ci_high)})`),
+    );
+  }
+
+  readout.replaceChildren(
+    el(
+      "p",
+      {},
+      `Barcelona: month-plus listings were ${gap.points} points more likely than shorter-stay listings to be absent from the September scrape (95% interval ${range(gap.ci_low, gap.ci_high)}). ` +
+        `The interval is above zero for ${clearGap.join(", ")}` +
+        (includesZero.length ? ` and includes zero for ${includesZero.join(" and ")}.` : "."),
+    ),
+    el("p", {}, "Barcelona minus each other city:"),
+    contrastList,
+    el(
+      "p",
+      {},
+      distinguishable.length === 0
+        ? "Every one of these differences includes zero: the data cannot distinguish Barcelona's gap from any of the four other cities' gaps."
+        : `Barcelona's gap is clearly different from ${distinguishable.map((r) => CITY_LABELS[r.city]).join(", ")}; the others cannot be told apart from it.`,
+    ),
+    el(
+      "p",
+      { class: "note" },
+      `The intervals resample host accounts, because one operator can withdraw many listings at once. Treating listings as independent would give Barcelona ${range(gap.listing_level_ci_low, gap.listing_level_ci_high)}, which is too narrow. ` +
+        "This compares timing across cities; it is not an estimate of any rule's effect, and a single Barcelona snapshot before January cannot establish a common trend.",
+    ),
+  );
 }

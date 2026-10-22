@@ -4,6 +4,13 @@ import { cssVar, onThemeChange } from "./ui";
 
 export const MIN_CHART_WIDTH = 300;
 
+/** Bottom margin for a chart whose x axis has a title: room for the tick
+ *  labels AND the title below them. With Plot's default margin the title
+ *  is drawn on top of the tick numbers. */
+export const X_TITLE_MARGIN = 54;
+/** Extra chart height that margin needs compared with Plot's default (30). */
+export const X_TITLE_EXTRA_HEIGHT = X_TITLE_MARGIN - 30;
+
 /** Base `style` option for Plot, following the CSS theme tokens. */
 export function plotStyle(): Record<string, string> {
   return { background: "transparent", color: cssVar("--text"), fontSize: "12px" };

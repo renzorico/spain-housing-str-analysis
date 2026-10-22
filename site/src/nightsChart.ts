@@ -4,12 +4,12 @@
 // separate, labelled exploration line.
 import * as Plot from "@observablehq/plot";
 
-import { mountChart, plotStyle } from "./charts";
+import { mountChart, plotStyle, X_TITLE_MARGIN } from "./charts";
 import { CITIES, CITY_LABELS, type Band, type City, type CityRow, type NightsRow } from "./data";
 import { cssVar, el, formatInt, formatPct, POPULATION, requireElement, segmented } from "./ui";
 
 const MAX_NIGHTS_SHOWN = 60; // longer minimum stays are summarised in the readout
-const CHART_HEIGHT = 300;
+const CHART_HEIGHT = 320;
 const NARROW_WIDTH = 520; // below this, axis labels every 10 nights instead of 5
 
 interface Bar {
@@ -66,7 +66,7 @@ export function initNightsChart(rows: NightsRow[], stayLine: number, cities: Cit
       width,
       height: CHART_HEIGHT,
       marginLeft: 40,
-      marginBottom: 36,
+      marginBottom: X_TITLE_MARGIN,
       style: plotStyle(),
       x: {
         label: "minimum stay (nights) →",
