@@ -90,9 +90,16 @@ function day(iso: string): Date {
 }
 
 const DATA_ROW = "Data on this page";
-const LATER_ROW = "Later events";
+const LATER_LAW_ROW = "Later law";
+const ELECTION_ROW = "Elections";
+const EVENT_LABEL_GAP_PX = 10;
 
-function timelineSpans(meta: Meta): { spans: Span[]; points: Span[] } {
+interface EventPoint extends Span {
+  text: string;
+  side: "left" | "right";
+}
+
+function timelineSpans(meta: Meta): { spans: Span[]; points: EventPoint[] } {
   const timelineStart = day(TIMELINE_START);
   const timelineEnd = day(TIMELINE_END);
   const clamp = (date: Date) => (date < timelineStart ? timelineStart : date);
@@ -104,27 +111,31 @@ function timelineSpans(meta: Meta): { spans: Span[]; points: Span[] } {
   }));
   const [first, last] = meta.observation_window;
   spans.push({ row: DATA_ROW, start: day(first), end: day(last), label: `snapshots ${first} to ${last}` });
-  const points: Span[] = [
-    ...meta.post_observation_developments.map((item) => ({
-      row: LATER_ROW,
-      start: day(item.date),
-      end: day(item.date),
-      label: `${item.title}: ${item.date}`,
-    })),
-    ...Object.entries(meta.context_events).map(([id, date]) => ({
-      row: LATER_ROW,
-      start: day(date),
-      end: day(date),
-      label: `${id.replace("_", " ")}: ${date}`,
-    })),
-  ];
-  return { spans, points };
+
+  const laws: EventPoint[] = meta.post_observation_developments.map((item) => ({
+    row: LATER_LAW_ROW,
+    start: day(item.date),
+    end: day(item.date),
+    label: `${item.title}: ${item.date}`,
+    text: (item.title.split(":")[0] ?? item.title).replace("Real Decreto-ley", "RDL"),
+    side: "right",
+  }));
+  // The two elections are six months apart, so their labels go on opposite sides.
+  const elections: EventPoint[] = Object.entries(meta.context_events).map(([id, date], index) => ({
+    row: ELECTION_ROW,
+    start: day(date),
+    end: day(date),
+    label: `${id.replace("_", " ")}: ${date}`,
+    text: id === "general_election" ? "General" : id === "municipal_election" ? "Municipal" : id.replace("_", " "),
+    side: index % 2 === 0 ? "left" : "right",
+  }));
+  return { spans, points: [...laws, ...elections] };
 }
 
 export function initLevers(inputs: Inputs): void {
   const { meta } = inputs;
   const { spans, points } = timelineSpans(meta);
-  const rows = [...spans.map((s) => s.row), LATER_ROW];
+  const rows = [...spans.map((s) => s.row), LATER_LAW_ROW, ELECTION_ROW];
 
   mountChart(requireElement("timeline-chart"), (width) => {
     const narrow = width < 560;
@@ -149,6 +160,8 @@ export function initLevers(inputs: Inputs): void {
           title: (s: Span) => `${s.row}\n${s.label}`,
         }),
         Plot.dot(points, { x: "start", y: "row", r: 6, fill: cssVar("--cat-4"), tip: true, title: "label" }),
+        Plot.text(points.filter((p) => p.side === "right"), { x: "start", y: "row", text: "text", textAnchor: "start", dx: EVENT_LABEL_GAP_PX, fill: cssVar("--muted") }),
+        Plot.text(points.filter((p) => p.side === "left"), { x: "start", y: "row", text: "text", textAnchor: "end", dx: -EVENT_LABEL_GAP_PX, fill: cssVar("--muted") }),
       ],
     });
     plot.setAttribute("aria-label", "Timeline: when each selected housing rule applies, the period covered by this data, and later events including elections.");

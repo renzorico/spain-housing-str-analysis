@@ -8,9 +8,11 @@ import { cssVar, formatCalendarQuarter, formatInt, requireElement, segmented } f
 type View = "level" | "yoy";
 
 // Policy dates drawn on the chart, read from config via meta.json.
-const MARKED_LEVERS: Record<string, string> = {
-  rent_cap: "rent limit",
-  seasonal_rentals: "limit on seasonal lets",
+// Full and short labels: two markers two years apart collide at phone width.
+const NARROW_WIDTH = 520;
+const MARKED_LEVERS: Record<string, { full: string; short: string }> = {
+  rent_cap: { full: "rent limit", short: "limit" },
+  seasonal_rentals: { full: "limit on seasonal lets", short: "seasonal" },
 };
 
 interface Point {
@@ -23,9 +25,9 @@ export function initRents(rents: RentRow[], meta: Meta): void {
   let view: View = "level";
   let render = () => {};
 
-  const markers = Object.entries(MARKED_LEVERS).flatMap(([id, label]) => {
+  const markerDates = Object.entries(MARKED_LEVERS).flatMap(([id, labels]) => {
     const lever = meta.policy_levers[id];
-    return lever ? [{ date: new Date(`${lever.applies_from}T00:00:00`), label }] : [];
+    return lever ? [{ date: new Date(`${lever.applies_from}T00:00:00`), labels }] : [];
   });
 
   function points(): Point[] {
@@ -38,6 +40,7 @@ export function initRents(rents: RentRow[], meta: Meta): void {
   function draw(width: number): Element {
     const data = points();
     const isLevel = view === "level";
+    const markers = markerDates.map((m) => ({ date: m.date, label: width < NARROW_WIDTH ? m.labels.short : m.labels.full }));
     const plot = Plot.plot({
       width,
       height: 300,
