@@ -26,6 +26,7 @@ import { initNightsChart } from "./nightsChart";
 import { el, formatPct, POPULATION, requireElement } from "./ui";
 
 const LATEST_ROUND = "Sep 2026";
+const REPOSITORY_URL = "https://github.com/renzorico/spain-housing-str-analysis";
 
 function renderHeroStats(cities: CityRow[], register: Register): void {
   const latest = (city: string) => cities.find((c) => c.city === city)?.rounds[LATEST_ROUND];
@@ -62,6 +63,15 @@ function renderFooter(meta: Meta): void {
     }),
   );
   requireElement("caveats").replaceChildren(...meta.caveats.map((text) => el("li", {}, text)));
+
+  const footer = requireElement("footer-links");
+  footer.append(
+    document.createTextNode("Method, code and every number: "),
+    el("a", { href: REPOSITORY_URL, rel: "noopener" }, "the repository"),
+    document.createTextNode(
+      ` (notebooks, tests and the exported data). Data exported ${meta.generated}; rules checked against the official gazettes on ${meta.levers_as_of}. Data licensed CC BY 4.0.`,
+    ),
+  );
 }
 
 function showError(error: unknown): void {

@@ -69,7 +69,8 @@
         <h2 id="map-title">Every listing with open dates in Barcelona</h2>
         <p>
           Colour the map by minimum stay, by the licence a listing shows, or by how many listings its
-          host account runs. Switch quarters to see the market change. Tap a dot for details.
+          host account runs. Switch quarters to see the market change. Tap a dot for details, or a legend entry
+          to hide or show that group.
         </p>
         <div class="controls" id="map-controls"></div>
         <div class="map-wrap">
@@ -161,7 +162,9 @@
         <div class="chart" id="rents-chart" role="img"></div>
         <p class="note">
           The timing is shown; the cause is not. The average moves when the mix of flats rented
-          changes, and interest rates, wages and supply all move rents at the same time.
+          changes, and interest rates, wages and supply all move rents at the same time. The
+          vertical axis of the first view starts at €900, not zero, which makes the swings look
+          larger than they are in proportion.
         </p>
       </section>
 
@@ -185,10 +188,7 @@
       <h2>Sources and caveats</h2>
       <ul id="sources"></ul>
       <ul id="caveats"></ul>
-      <p class="note">
-        Method, code and every number: the project's notebooks and <code>src/</code>. Data licensed
-        CC BY 4.0.
-      </p>
+      <p class="note" id="footer-links"></p>
     </footer>
 
     <script type="module" src="/src/main.ts"></script>
