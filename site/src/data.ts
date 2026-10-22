@@ -138,10 +138,19 @@ export interface CityRow {
 
 export interface RegisterMatch {
   snapshot: string;
+  /** the register quarter nearest in time to this snapshot */
+  register_quarter: string;
+  /** administrative records (case ids): the headline stock */
+  register_records: number;
+  /** distinct parseable HUT numbers; a few records have none */
+  register_numbers: number;
   listings_showing_number: number;
-  distinct_numbers: number;
-  match_register_pct: number;
-  register_visible_pct: number;
+  displayed_numbers: number;
+  displayed_numbers_found_in_register: number;
+  /** share of displayed numbers that exist in the register */
+  displayed_found_pct: number;
+  /** share of register numbers shown on at least one listing with open dates */
+  register_numbers_displayed_pct: number;
   numbers_on_2plus_listings: number;
 }
 

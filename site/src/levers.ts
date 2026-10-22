@@ -30,9 +30,10 @@ function dataShows(id: string, { meta, register, rents, trends, cities }: Inputs
       const totals = Object.values(register.totals);
       if (!latest || totals.length === 0) return "";
       return (
-        `The register holds ${formatInt(Math.min(...totals))}–${formatInt(Math.max(...totals))} licensed flats in every published quarter: ` +
-        `no decline yet. ${formatPct(latest.match_register_pct, 0)} of licence numbers shown on Airbnb match it, ` +
-        `and only ${formatPct(latest.register_visible_pct, 0)} of registered flats appear on Airbnb with their number.`
+        `The register holds ${formatInt(Math.min(...totals))}–${formatInt(Math.max(...totals))} records in every published quarter: ` +
+        `no decline yet. ${formatPct(latest.displayed_found_pct, 0)} of the licence numbers shown on listings with open dates exist in it, ` +
+        `and ${formatPct(latest.register_numbers_displayed_pct, 0)} of its numbers are shown on at least one such listing. ` +
+        "A number match does not verify that the listing is that flat."
       );
     }
     case "rent_cap": {

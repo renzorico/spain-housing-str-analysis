@@ -20,9 +20,15 @@ export function initRegister(register: Register, places: NeighbourhoodRow[]): vo
   if (!latest || total === undefined) return;
 
   const tiles: [string, string][] = [
-    [formatInt(total), `licensed tourist flats in Barcelona's register (${quarterLabel(register.register_quarter)})`],
-    [formatPct(latest.match_register_pct, 0), `of licence numbers shown on Airbnb exist in the register (${formatQuarter(latest.snapshot)})`],
-    [formatPct(latest.register_visible_pct, 0), "of registered flats appear on Airbnb with their number"],
+    [formatInt(total), `records in Barcelona's register of tourist flats (${quarterLabel(register.register_quarter)})`],
+    [
+      formatPct(latest.displayed_found_pct, 0),
+      `of the ${formatInt(latest.displayed_numbers)} licence numbers shown on listings with open dates exist in the register (${formatQuarter(latest.snapshot)} snapshot, ${quarterLabel(latest.register_quarter)} register)`,
+    ],
+    [
+      formatPct(latest.register_numbers_displayed_pct, 0),
+      `of the register's ${formatInt(latest.register_numbers)} numbers are shown on at least one listing with open dates`,
+    ],
   ];
   requireElement("register-stats").replaceChildren(
     ...tiles.map(([value, label]) => {

@@ -42,7 +42,7 @@ function renderHeroStats(cities: CityRow[], register: Register): void {
       `${Math.round(Math.min(...others))}–${Math.round(Math.max(...others))}%`,
       `in ${CITIES.filter((c) => c !== "barcelona").map((c) => CITY_LABELS[c]).join(", ")}`,
     ],
-    [formatPct(match.match_register_pct, 0), "of tourist-licence numbers shown on Airbnb match the official register"],
+    [formatPct(match.displayed_found_pct, 0), "of the licence numbers shown on Barcelona listings exist in the official register of tourist flats"],
   ];
   requireElement("hero-stats").replaceChildren(
     ...tiles.map(([value, label]) => {
