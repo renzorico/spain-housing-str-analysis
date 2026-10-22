@@ -114,6 +114,19 @@ export async function initMap(snapshots: string[]): Promise<void> {
     return ["!", ["in", ["get", PROPERTY[mode]], ["literal", [...hidden]]]];
   }
 
+  /** Draw order: the most common group first, rarer groups on top, so the
+   *  minority colours are not buried under thousands of blue dots. */
+  function sortKeyExpression(): ExpressionSpecification {
+    const counts = new Map<string, number>();
+    for (const feature of data.features) {
+      const code = String(feature.properties?.[PROPERTY[mode]]);
+      counts.set(code, (counts.get(code) ?? 0) + 1);
+    }
+    const byCountDescending = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    const pairs = byCountDescending.flatMap(([code], rank) => [code, rank]);
+    return ["match", ["get", PROPERTY[mode]], ...pairs, 0] as unknown as ExpressionSpecification;
+  }
+
   function addLayer(): void {
     if (map.getSource(SOURCE_ID)) return;
     map.addSource(SOURCE_ID, { type: "geojson", data });
@@ -121,10 +134,12 @@ export async function initMap(snapshots: string[]): Promise<void> {
       id: LAYER_ID,
       type: "circle",
       source: SOURCE_ID,
+      layout: { "circle-sort-key": sortKeyExpression() },
       paint: {
         "circle-color": colourExpression(),
-        "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 1.2, 13, 2.6, 16, 6],
-        "circle-opacity": 0.8,
+        // Smaller and more transparent when zoomed out, where 11,000 dots overlap
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 0.9, 12, 1.6, 14, 3.2, 16, 6],
+        "circle-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0.55, 14, 0.85],
         "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 13, 0, 16, 0.6],
         "circle-stroke-color": cssVar("--surface"),
       },
@@ -135,6 +150,7 @@ export async function initMap(snapshots: string[]): Promise<void> {
   function restyle(): void {
     if (!map.getLayer(LAYER_ID)) return;
     map.setPaintProperty(LAYER_ID, "circle-color", colourExpression());
+    map.setLayoutProperty(LAYER_ID, "circle-sort-key", sortKeyExpression());
     map.setPaintProperty(LAYER_ID, "circle-stroke-color", cssVar("--surface"));
     map.setFilter(LAYER_ID, filterExpression());
     renderLegend();
@@ -221,6 +237,7 @@ export async function initMap(snapshots: string[]): Promise<void> {
         snapshot = value;
         data = toGeoJson(await loadPoints(value));
         (map.getSource(SOURCE_ID) as GeoJSONSource | undefined)?.setData(data);
+        if (map.getLayer(LAYER_ID)) map.setLayoutProperty(LAYER_ID, "circle-sort-key", sortKeyExpression());
         renderLegend();
       },
     ),
