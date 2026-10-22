@@ -15,9 +15,17 @@ GONE = "gone"
 INACTIVE = "inactive"
 
 
+POPULATION_LABEL = "listings with open dates"
+
+
 def active(df: pd.DataFrame) -> pd.DataFrame:
-    """Listings with at least one open date - the same rule for every
-    snapshot and city (see data/README.md)."""
+    """Listings with at least one open date in the next 365 days - the same
+    rule for every snapshot and city (see data/README.md).
+
+    "Active" is shorthand only. An empty calendar can mean booked, blocked or
+    withdrawn, so published text says POPULATION_LABEL and calls the rest
+    "listed, no open dates".
+    """
     return df[df["is_active"]]
 
 
@@ -35,9 +43,21 @@ def snapshot_summary(df: pd.DataFrame) -> dict:
     """
     act = active(df)
     priced = act[act["price"].between(1, cfg.MAX_PRICE)]
+    masks = {
+        "share_31_nights": act["minimum_nights"] == cfg.MAX_TOURIST_NIGHTS,
+        "share_month_plus": act["minimum_nights"] >= cfg.MAX_TOURIST_NIGHTS,
+        "share_tourist_licence": act["has_tourist_licence"],
+        "share_nrua_seasonal": act["national_licence"] == "nrua_seasonal",
+        "share_professional": act["is_professional"],
+        "share_entire_home": act["is_entire_home"],
+    }
     return {
+        "population": POPULATION_LABEL,
         "listings": int(len(df)),
         "active": int(len(act)),
+        # [numerator, denominator] behind every share, so each published
+        # percentage can be checked against its population.
+        "counts": {name: [int(mask.sum()), int(len(mask))] for name, mask in masks.items()},
         "share_31_nights": share(act["minimum_nights"] == cfg.MAX_TOURIST_NIGHTS),
         "share_month_plus": share(act["minimum_nights"] >= cfg.MAX_TOURIST_NIGHTS),
         "share_tourist_licence": share(act["has_tourist_licence"]),
@@ -111,3 +131,30 @@ def exit_gap(table: pd.DataFrame) -> tuple[float, float]:
     p2, n2 = tourist[GONE] / tourist.sum(), tourist.sum()
     se = np.sqrt(p1 * (1 - p1) / n1 + p2 * (1 - p2) / n2)
     return float((p1 - p2) * 100), float(se * 100)
+
+
+def availability_sensitivity(df: pd.DataFrame) -> dict:
+    """How the 31+ share changes with the population definition.
+
+    An empty calendar is ambiguous, so the share is shown for three
+    populations. Unknown minimum stays are counted separately and never
+    treated as short stays.
+    """
+    open_dates = df["availability_365"] > 0
+    reviewed = df["number_of_reviews_ltm"] > 0
+    populations = {
+        "open_dates": open_dates,
+        "open_dates_or_reviewed_12m": open_dates | reviewed,
+        "all_listings": pd.Series(True, index=df.index),
+    }
+    result = {}
+    for name, mask in populations.items():
+        selected = df.loc[mask]
+        known = selected.loc[selected["minimum_nights"].notna()]
+        result[name] = {
+            "listings": int(len(selected)),
+            "unknown_minimum_stay": int(selected["minimum_nights"].isna().sum()),
+            "known_minimum_stay": int(len(known)),
+            "month_plus_pct": share(known["minimum_nights"] >= cfg.MAX_TOURIST_NIGHTS),
+        }
+    return result

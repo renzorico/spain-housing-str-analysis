@@ -63,3 +63,20 @@ def test_exit_gap_in_points():
     gap, se = metrics.exit_gap(table)
     assert gap == 50.0
     assert se > 0
+
+
+def test_availability_sensitivity_keeps_unknown_stays_apart():
+    df = pd.DataFrame(
+        {
+            "availability_365": [10, 10, 0, 0, 0],
+            "number_of_reviews_ltm": [0, 0, 4, 0, 0],
+            "minimum_nights": [31.0, 2.0, float("nan"), 40.0, 3.0],
+        }
+    )
+    result = metrics.availability_sensitivity(df)
+    assert result["open_dates"]["month_plus_pct"] == 50.0
+    # the reviewed listing has an unknown stay: counted as unknown, not as short
+    assert result["open_dates_or_reviewed_12m"]["unknown_minimum_stay"] == 1
+    assert result["open_dates_or_reviewed_12m"]["known_minimum_stay"] == 2
+    assert result["all_listings"]["month_plus_pct"] == 50.0
+    assert result["all_listings"]["known_minimum_stay"] == 4
